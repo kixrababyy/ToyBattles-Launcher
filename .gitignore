@@ -1,0 +1,46 @@
+## Build outputs
+**/bin/
+**/obj/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VS directories
+.vs/
+.vscode/
+
+## Rider
+.idea/
+
+## NuGet
+**/packages/
+
+## Logs
+*.log
+
+## OS files
+Thumbs.db
+.DS_Store
+
+## Game data (not part of the launcher source)
+data/
+Bin/
+LR/
+ErrLog.txt
+launcher.log
+SteamAuth.ini
+
+## Legacy launcher binaries
+Launcher.exe
+*.dll
+unins000.*
+GameLog.txt
+SysLog.txt
+BugslayerUtil.dll
+DeltaMAX.dll
+LauncherAx.dll
+steam_api.dll
+gdiplus.dll

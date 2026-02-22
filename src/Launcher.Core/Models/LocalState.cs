@@ -1,0 +1,70 @@
+using System.Text.Json;
+
+namespace Launcher.Core.Models;
+
+/// <summary>
+/// Persisted local state: install path, installed version, last check time.
+/// Saved as JSON to %LOCALAPPDATA%\ToyBattlesLauncher\state.json.
+/// </summary>
+public class LocalState
+{
+    public string? GameRootPath { get; set; }
+    public string? InstalledVersion { get; set; }
+    public DateTime? LastCheckUtc { get; set; }
+    public string? LaunchArguments { get; set; }
+    public string? CustomUpdateUrl { get; set; }
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
+    public static string DefaultStatePath =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ToyBattlesLauncher",
+            "state.json");
+
+    public GameVersion GetInstalledVersion()
+    {
+        if (string.IsNullOrEmpty(InstalledVersion))
+            return GameVersion.Empty;
+
+        return GameVersion.TryParse(InstalledVersion) ?? GameVersion.Empty;
+    }
+
+    public void SetInstalledVersion(GameVersion version)
+    {
+        InstalledVersion = version.ToString();
+        LastCheckUtc = DateTime.UtcNow;
+    }
+
+    public static LocalState Load(string? path = null)
+    {
+        path ??= DefaultStatePath;
+
+        if (!File.Exists(path))
+            return new LocalState();
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<LocalState>(json, JsonOptions) ?? new LocalState();
+        }
+        catch
+        {
+            return new LocalState();
+        }
+    }
+
+    public void Save(string? path = null)
+    {
+        path ??= DefaultStatePath;
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        var json = JsonSerializer.Serialize(this, JsonOptions);
+        File.WriteAllText(path, json);
+    }
+}

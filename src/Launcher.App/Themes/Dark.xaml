@@ -1,0 +1,391 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ==================== COLOR PALETTE ==================== -->
+    <!-- Deep navy backgrounds (inspired by Misty + ToyBattles) -->
+    <Color x:Key="BgDarkest">#080C14</Color>
+    <Color x:Key="BgDark">#0D1220</Color>
+    <Color x:Key="BgMedium">#131A2E</Color>
+    <Color x:Key="BgCard">#1A2240</Color>
+    <Color x:Key="BgHover">#1F2B52</Color>
+    <Color x:Key="BgNavBar">#0B1020</Color>
+
+    <!-- Accent: warm gold/amber (ToyBattles PLAY button inspired) -->
+    <Color x:Key="AccentGold">#F5C518</Color>
+    <Color x:Key="AccentAmber">#FFB800</Color>
+    <Color x:Key="AccentGoldDark">#C49B00</Color>
+
+    <!-- Secondary accent: soft purple glow -->
+    <Color x:Key="GlowPurple">#6C5CE7</Color>
+    <Color x:Key="GlowBlue">#4A6CF7</Color>
+    <Color x:Key="GlowCyan">#00D2FF</Color>
+
+    <!-- Text -->
+    <Color x:Key="TextPrimary">#F0F0F8</Color>
+    <Color x:Key="TextSecondary">#8892B0</Color>
+    <Color x:Key="TextMuted">#4A5578</Color>
+    <Color x:Key="TextGold">#F5C518</Color>
+
+    <!-- Status -->
+    <Color x:Key="SuccessGreen">#2ECC71</Color>
+    <Color x:Key="ErrorRed">#FF4757</Color>
+
+    <!-- ==================== BRUSHES ==================== -->
+    <SolidColorBrush x:Key="BgDarkestBrush" Color="{StaticResource BgDarkest}"/>
+    <SolidColorBrush x:Key="BgDarkBrush" Color="{StaticResource BgDark}"/>
+    <SolidColorBrush x:Key="BgMediumBrush" Color="{StaticResource BgMedium}"/>
+    <SolidColorBrush x:Key="BgCardBrush" Color="{StaticResource BgCard}"/>
+    <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource BgHover}"/>
+    <SolidColorBrush x:Key="BgNavBarBrush" Color="{StaticResource BgNavBar}"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}"/>
+    <SolidColorBrush x:Key="TextGoldBrush" Color="{StaticResource TextGold}"/>
+    <SolidColorBrush x:Key="AccentGoldBrush" Color="{StaticResource AccentGold}"/>
+    <SolidColorBrush x:Key="AccentAmberBrush" Color="{StaticResource AccentAmber}"/>
+    <SolidColorBrush x:Key="GlowPurpleBrush" Color="{StaticResource GlowPurple}"/>
+    <SolidColorBrush x:Key="SuccessGreenBrush" Color="{StaticResource SuccessGreen}"/>
+
+    <!-- Gold gradient for PLAY button -->
+    <LinearGradientBrush x:Key="GoldGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource AccentAmber}" Offset="0"/>
+        <GradientStop Color="{StaticResource AccentGold}" Offset="0.5"/>
+        <GradientStop Color="{StaticResource AccentAmber}" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Subtle glow gradient for backgrounds -->
+    <RadialGradientBrush x:Key="SubtleGlowBrush" Center="0.5,0.5" RadiusX="0.6" RadiusY="0.6">
+        <GradientStop Color="#106C5CE7" Offset="0"/>
+        <GradientStop Color="#006C5CE7" Offset="1"/>
+    </RadialGradientBrush>
+
+    <!-- Card border glow -->
+    <LinearGradientBrush x:Key="CardBorderGlow" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#206C5CE7" Offset="0"/>
+        <GradientStop Color="#104A6CF7" Offset="0.5"/>
+        <GradientStop Color="#206C5CE7" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ==================== CORNER RADIUS ==================== -->
+    <CornerRadius x:Key="RadiusSmall">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMedium">10</CornerRadius>
+    <CornerRadius x:Key="RadiusLarge">14</CornerRadius>
+    <CornerRadius x:Key="RadiusRound">20</CornerRadius>
+
+    <!-- ==================== PLAY BUTTON (large gold) ==================== -->
+    <Style x:Key="PlayButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight" Value="ExtraBold"/>
+        <Setter Property="Foreground" Value="#1A1A2E"/>
+        <Setter Property="Padding" Value="60,16"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <!-- Outer glow -->
+                        <Border x:Name="glow"
+                                CornerRadius="12"
+                                Margin="-4"
+                                Opacity="0.5">
+                            <Border.Effect>
+                                <BlurEffect Radius="20"/>
+                            </Border.Effect>
+                            <Border.Background>
+                                <SolidColorBrush Color="{StaticResource AccentGold}"/>
+                            </Border.Background>
+                        </Border>
+                        <!-- Main button -->
+                        <Border x:Name="border"
+                                Background="{StaticResource GoldGradientBrush}"
+                                CornerRadius="12"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="24" ShadowDepth="0" Color="{StaticResource AccentGold}" Opacity="0.4"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="glow" Property="Opacity" Value="0.7"/>
+                            <Setter TargetName="border" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="36" ShadowDepth="0" Color="{StaticResource AccentGold}" Opacity="0.6"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Opacity" Value="0.35"/>
+                            <Setter TargetName="glow" Property="Opacity" Value="0.1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== PRIMARY BUTTON (accent, medium) ==================== -->
+    <Style x:Key="PrimaryButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="#1A1A2E"/>
+        <Setter Property="Background" Value="{StaticResource GoldGradientBrush}"/>
+        <Setter Property="Padding" Value="28,12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="{StaticResource AccentGold}" Opacity="0.3"/>
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="24" ShadowDepth="0" Color="{StaticResource AccentGold}" Opacity="0.5"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== NAV BUTTON ==================== -->
+    <Style x:Key="NavButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="16,10"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== LINK CARD BUTTON (for Discord, Website, Register) ==================== -->
+    <Style x:Key="LinkCardButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+        <Setter Property="Padding" Value="16,14"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#15FFFFFF"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="10"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="0" Color="{StaticResource GlowPurple}" Opacity="0"/>
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="BorderBrush" Value="#306C5CE7"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter TargetName="border" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="{StaticResource GlowPurple}" Opacity="0.25"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== SECONDARY BUTTON ==================== -->
+    <Style x:Key="SecondaryButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+        <Setter Property="Padding" Value="20,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#15FFFFFF"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="#306C5CE7"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== TEXTBOX ==================== -->
+    <Style x:Key="DarkTextBox" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{StaticResource BgMediumBrush}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#15FFFFFF"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="8"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource GlowPurpleBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== PROGRESSBAR ==================== -->
+    <Style x:Key="AccentProgressBar" TargetType="ProgressBar">
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="Background" Value="{StaticResource BgMediumBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border x:Name="PART_Track"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3"/>
+                        <Border x:Name="PART_Indicator"
+                                CornerRadius="3"
+                                HorizontalAlignment="Left">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Color="{StaticResource AccentAmber}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource AccentGold}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="10" ShadowDepth="0" Color="{StaticResource AccentGold}" Opacity="0.5"/>
+                            </Border.Effect>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== SCROLLVIEWER ==================== -->
+    <Style TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollContentPresenter Grid.Column="0"/>
+                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                   Grid.Column="1"
+                                   Value="{TemplateBinding VerticalOffset}"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                   Width="4"
+                                   Margin="2,0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== CARD BORDER ==================== -->
+    <Style x:Key="CardBorder" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="BorderBrush" Value="#10FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- ==================== GLOW CARD (with subtle purple border glow) ==================== -->
+    <Style x:Key="GlowCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderGlow}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="{StaticResource GlowPurple}" Opacity="0.08"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

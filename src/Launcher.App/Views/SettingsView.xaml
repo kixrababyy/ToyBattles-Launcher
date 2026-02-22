@@ -1,0 +1,89 @@
+<UserControl x:Class="Launcher.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="SettingsView_Loaded">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="FadeInStoryboard">
+            <DoubleAnimation Storyboard.TargetName="RootPanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.4"/>
+            <ThicknessAnimation Storyboard.TargetName="RootPanel"
+                                Storyboard.TargetProperty="Margin"
+                                From="0,16,0,0" To="0"
+                                Duration="0:0:0.4"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="RootPanel" Opacity="0" Margin="0,0,0,20">
+
+            <!-- Header -->
+            <TextBlock Text="Settings" FontSize="26" FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Margin="0,0,0,24"/>
+
+            <!-- Game Installation -->
+            <Border Style="{StaticResource GlowCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Game Installation" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="GAME DIRECTORY" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding GameRootPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource DarkTextBox}" IsReadOnly="True"/>
+                        <Button Grid.Column="1" Content="Browse"
+                                Command="{Binding BrowseGameRootCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="INSTALLED VERSION" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,16,0,4"/>
+                    <TextBlock Text="{Binding InstalledVersion}" FontSize="14"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Launch Options -->
+            <Border Style="{StaticResource GlowCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Launch Options" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="LAUNCH ARGUMENTS (OPTIONAL)" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding LaunchArguments, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource DarkTextBox}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Advanced -->
+            <Border Style="{StaticResource GlowCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="CUSTOM UPDATE URL" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding UpdateUrl, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource DarkTextBox}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Actions -->
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}"
+                        Style="{StaticResource PrimaryButton}" Margin="0,0,12,0"/>
+                <Button Content="Open Logs" Command="{Binding OpenLogsFolderCommand}"
+                        Style="{StaticResource SecondaryButton}"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
