@@ -340,8 +340,8 @@
         </Setter>
     </Style>
 
-    <!-- ==================== SCROLLVIEWER ==================== -->
-    <Style TargetType="ScrollViewer">
+    <!-- ==================== SCROLLVIEWER (keyed, use explicitly) ==================== -->
+    <Style x:Key="DarkScrollViewer" TargetType="ScrollViewer">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollViewer">
