@@ -23,10 +23,10 @@ public class ParticleCanvas : Canvas
 {
     // ── Tunables (mirroring the Framer property controls) ──────────
     private const int     ParticleCount   = 60;
-    private const double  ParticleSizeMin = 1.5;
-    private const double  ParticleSizeMax = 4.0;
+    private const double  ParticleSizeMin = 2.5;
+    private const double  ParticleSizeMax = 6.0;
     private const double  BaseOpacity     = 0.55;
-    private const double  GlowRadius      = 14.0;   // px — equivalent to shadowBlur
+    private const double  GlowRadius      = 8.0;    // px — equivalent to shadowBlur
     private const double  MovementSpeed   = 0.45;
     private const double  MouseInfluence  = 140.0;   // px radius
     private const double  GravityStrength = 40.0;
