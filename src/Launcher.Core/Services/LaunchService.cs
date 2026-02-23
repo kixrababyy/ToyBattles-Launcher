@@ -8,14 +8,14 @@ namespace Launcher.Core.Services;
 public class LaunchService
 {
     /// <summary>
-    /// Launch MicroVolts.exe from GameRoot\Bin\ with working directory set to Bin\.
+    /// Launch MicroVolts.exe from GameRoot\Bin\ with working directory set to GameRoot.
     /// </summary>
     /// <param name="gameRootPath">Root path of the game installation.</param>
     /// <param name="arguments">Optional command-line arguments.</param>
     public static bool Launch(string gameRootPath, string? arguments = null)
     {
         var exePath = Path.Combine(gameRootPath, "Bin", "MicroVolts.exe");
-        var workingDir = Path.Combine(gameRootPath, "Bin");
+        var workingDir = gameRootPath;
 
         if (!File.Exists(exePath))
         {
@@ -31,7 +31,7 @@ public class LaunchService
             {
                 FileName = exePath,
                 WorkingDirectory = workingDir,
-                UseShellExecute = true
+                UseShellExecute = false
             };
 
             if (!string.IsNullOrWhiteSpace(arguments))

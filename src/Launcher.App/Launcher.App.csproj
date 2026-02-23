@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <RootNamespace>Launcher.App</RootNamespace>
+    <AssemblyName>Launcher</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- <ApplicationIcon>Assets\icon.ico</ApplicationIcon> -->
   </PropertyGroup>
 
@@ -15,7 +17,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Embedded image resources (logo, icons) -->
     <Resource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Wallpapers folder: copied to output so users can swap images -->
+    <Content Include="wallpapers\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell.exe -NoProfile -Command \"& { $f = ''C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\Bin\\\\MicroVolts.exe''; $b = [IO.File]::ReadAllBytes\\($f\\); $s = [Text.Encoding]::ASCII.GetString\\($b\\); [regex]::Matches\\($s,''[!-~]{5,}''\\) | %{$_Value} | ?{$_-match ''unch|xecut|utex|Must|must''} | select -Unique }\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan2.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan3.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan4.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan5.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan6.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan7.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\scan8.ps1\")",
+      "WebFetch(domain:www.behance.net)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-EventLog -LogName Application -Newest 5 -EntryType Error | Where-Object { $_.Source -like ''*Launcher*'' -or $_.Source -like ''*.NET*'' -or $_.Source -like ''*Application Error*'' } | Format-List TimeGenerated, Source, Message\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Kiera\\\\Desktop\\\\ToyBattles Launcher NEW\\\\checklog.ps1\")"
+    ]
+  }
+}
