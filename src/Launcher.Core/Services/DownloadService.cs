@@ -9,8 +9,13 @@ public class DownloadProgress
     public long TotalBytes { get; set; }
     public double SpeedBytesPerSecond { get; set; }
     public TimeSpan EstimatedTimeRemaining { get; set; }
-    public double ProgressPercent =>
-        TotalBytes > 0 ? (double)BytesReceived / TotalBytes * 100.0 : 0;
+    private double? _progressPercentOverride;
+    public double ProgressPercent
+    {
+        get => _progressPercentOverride
+               ?? (TotalBytes > 0 ? (double)BytesReceived / TotalBytes * 100.0 : 0);
+        set => _progressPercentOverride = value;
+    }
     public string StatusText { get; set; } = string.Empty;
 }
 

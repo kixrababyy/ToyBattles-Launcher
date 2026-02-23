@@ -480,6 +480,9 @@
 
                     </Grid>
 
+                    <!-- ===== FLOATING PARTICLES ===== -->
+                    <views:ParticleCanvas/>
+
                     <!-- Bottom vignette: dark gradient overlay for text legibility -->
                     <Rectangle VerticalAlignment="Bottom" Height="300"
                                IsHitTestVisible="False">

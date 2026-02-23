@@ -30,6 +30,19 @@
 
     <Grid x:Name="RootGrid" Opacity="0">
 
+        <!-- ===== BANNER IMAGE (positioned at the dark gradient edge) ===== -->
+        <Image x:Name="BannerImage"
+               MaxHeight="360" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               Visibility="Collapsed"
+               Margin="36,0,0,30">
+            <Image.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="0"
+                                  Color="#26C0F0" Opacity="0.18"/>
+            </Image.Effect>
+        </Image>
+
         <!-- ===== BOTTOM OVERLAY: Game info + Play ===== -->
         <Grid VerticalAlignment="Bottom" Margin="36,0,36,32">
             <Grid.RowDefinitions>
@@ -39,34 +52,122 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Progress section -->
-            <StackPanel Grid.Row="0"
-                        Visibility="{Binding IsProgressVisible, Converter={StaticResource BoolToVis}}"
-                        Margin="0,0,0,18">
-                <!-- Speed / ETA / Status row -->
-                <Grid Margin="0,0,0,7">
-                    <TextBlock Text="{Binding StatusText}"
-                               FontSize="12" FontFamily="Segoe UI"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBlock Text="{Binding DownloadSpeed}"
-                                   FontSize="11" FontFamily="Segoe UI"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   Margin="0,0,14,0"
-                                   Visibility="{Binding DownloadSpeed, Converter={StaticResource StringToVis}}"/>
-                        <TextBlock Text="{Binding Eta}"
-                                   FontSize="11" FontFamily="Segoe UI"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   Visibility="{Binding Eta, Converter={StaticResource StringToVis}}"/>
-                    </StackPanel>
-                </Grid>
-                <!-- Progress bar -->
-                <ProgressBar Value="{Binding ProgressPercent}"
-                             Minimum="0" Maximum="100"
-                             Style="{StaticResource AccentProgressBar}"/>
-            </StackPanel>
+            <!-- Progress section — animated download card -->
+            <Border x:Name="ProgressPanel" Grid.Row="0"
+                    Background="#C0080D14" CornerRadius="14"
+                    BorderBrush="#2026C0F0" BorderThickness="1"
+                    Padding="20,16" Margin="0,0,0,18"
+                    Opacity="0" RenderTransformOrigin="0.5,1">
+                <Border.RenderTransform>
+                    <TranslateTransform Y="0"/>
+                </Border.RenderTransform>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsProgressVisible}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="Opacity"
+                                                From="0" To="1" Duration="0:0:0.5">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                From="20" To="0" Duration="0:0:0.5">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="0" Duration="0:0:0.35">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <StackPanel>
+                    <!-- Status + speed + ETA row -->
+                    <Grid Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                            <!-- Pulsing activity dot -->
+                            <Ellipse Width="8" Height="8" Margin="0,0,10,0"
+                                     VerticalAlignment="Center">
+                                <Ellipse.Fill>
+                                    <SolidColorBrush Color="{StaticResource AccentBlue}"/>
+                                </Ellipse.Fill>
+                                <Ellipse.Triggers>
+                                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                 From="0.4" To="1.0"
+                                                                 Duration="0:0:0.8">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <SineEase EasingMode="EaseInOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Ellipse.Triggers>
+                            </Ellipse>
+                            <TextBlock Text="{Binding StatusText}"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       FontFamily="Segoe UI"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DownloadSpeed}"
+                                       FontSize="12" FontFamily="Segoe UI"
+                                       Foreground="{StaticResource AccentBlueBrush}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,16,0"
+                                       Visibility="{Binding DownloadSpeed, Converter={StaticResource StringToVis}}"/>
+                            <TextBlock Text="{Binding Eta}"
+                                       FontSize="12" FontFamily="Segoe UI"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Visibility="{Binding Eta, Converter={StaticResource StringToVis}}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Progress bar -->
+                    <ProgressBar Value="{Binding ProgressPercent}"
+                                 Minimum="0" Maximum="100"
+                                 Style="{StaticResource AccentProgressBar}"/>
+
+                    <!-- Percentage text -->
+                    <TextBlock FontSize="11" FontFamily="Segoe UI"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Right"
+                               Margin="0,6,0,0">
+                        <TextBlock.Text>
+                            <Binding Path="ProgressPercent" StringFormat="{}{0:F1}%"/>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
 
             <!-- Main bottom bar: title left, PLAY right -->
             <Grid Grid.Row="1">
@@ -75,21 +176,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left: Game title + sub + version badges + status -->
+                <!-- Left: version badges + status -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
-
-                    <!-- Banner image (shown when Assets/banner.png exists) -->
-                    <Image x:Name="BannerImage"
-                           MaxHeight="80" HorizontalAlignment="Left"
-                           Stretch="Uniform"
-                           RenderOptions.BitmapScalingMode="HighQuality"
-                           Visibility="Collapsed"
-                           Margin="0,0,0,10">
-                        <Image.Effect>
-                            <DropShadowEffect BlurRadius="30" ShadowDepth="0"
-                                              Color="#26C0F0" Opacity="0.18"/>
-                        </Image.Effect>
-                    </Image>
 
                     <!-- Text fallback (shown when no banner.png) -->
                     <StackPanel x:Name="BannerTextFallback">

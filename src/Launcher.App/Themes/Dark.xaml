@@ -350,7 +350,7 @@
 
     <!-- ==================== PROGRESS BAR — brand blue glow ==================== -->
     <Style x:Key="AccentProgressBar" TargetType="ProgressBar">
-        <Setter Property="Height" Value="3"/>
+        <Setter Property="Height" Value="6"/>
         <Setter Property="Background" Value="#0EFFFFFF"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
@@ -359,20 +359,50 @@
                     <Grid>
                         <Border x:Name="PART_Track"
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="2"/>
+                                CornerRadius="3"/>
                         <Border x:Name="PART_Indicator"
-                                CornerRadius="2"
+                                CornerRadius="3"
                                 HorizontalAlignment="Left">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
                                     <GradientStop Color="{StaticResource AccentBlueDark}" Offset="0"/>
-                                    <GradientStop Color="{StaticResource AccentBlueLight}" Offset="1"/>
+                                    <GradientStop Color="{StaticResource AccentBlueLight}" Offset="0.5"/>
+                                    <GradientStop Color="{StaticResource AccentBlue}" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="8" ShadowDepth="0"
-                                                  Color="{StaticResource AccentBlue}" Opacity="0.7"/>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="0"
+                                                  Color="{StaticResource AccentBlue}" Opacity="0.8"/>
                             </Border.Effect>
+                            <!-- Shimmer overlay -->
+                            <Border CornerRadius="3" ClipToBounds="True">
+                                <Border x:Name="ShimmerBar" Width="80" Margin="-80,0,0,0"
+                                        HorizontalAlignment="Left" CornerRadius="3">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                            <GradientStop Color="Transparent" Offset="0"/>
+                                            <GradientStop Color="#44FFFFFF" Offset="0.5"/>
+                                            <GradientStop Color="Transparent" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Triggers>
+                                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <ThicknessAnimation
+                                                        Storyboard.TargetProperty="Margin"
+                                                        From="-80,0,0,0" To="1200,0,0,0"
+                                                        Duration="0:0:2.5">
+                                                        <ThicknessAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </ThicknessAnimation.EasingFunction>
+                                                    </ThicknessAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Border.Triggers>
+                                </Border>
+                            </Border>
                         </Border>
                     </Grid>
                 </ControlTemplate>

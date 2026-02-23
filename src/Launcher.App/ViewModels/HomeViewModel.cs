@@ -16,7 +16,8 @@ public enum LauncherState
     Ready,
     Launching,
     Error,
-    NeedGameRoot
+    NeedGameRoot,
+    Installing
 }
 
 /// <summary>
@@ -26,7 +27,11 @@ public class HomeViewModel : ViewModelBase
 {
     private readonly PatchService _patchService = new();
     private readonly DownloadService _downloadService = new();
+    private readonly InstallService _installService = new();
     private CancellationTokenSource? _cts;
+
+    /// <summary>Default base URL for fetching updateinfo.ini during fresh install.</summary>
+    private const string BootstrapUpdateInfoUrl = "http://cdn.toybattles.net/ENG/microvolts/patch.ini";
 
     private LauncherState _state = LauncherState.Initializing;
     public LauncherState State
@@ -100,14 +105,16 @@ public class HomeViewModel : ViewModelBase
         LauncherState.UpdateAvailable => "UPDATE",
         LauncherState.Downloading => "DOWNLOADING...",
         LauncherState.Applying => "APPLYING...",
+        LauncherState.Installing => "INSTALLING...",
         LauncherState.Ready => "PLAY",
         LauncherState.Launching => "LAUNCHING...",
         LauncherState.Error => "RETRY",
-        LauncherState.NeedGameRoot => "LOCATE GAME",
+        LauncherState.NeedGameRoot => "INSTALL",
         _ => "..."
     };
 
-    public bool IsProgressVisible => State is LauncherState.Downloading or LauncherState.Applying or LauncherState.Checking;
+    public bool IsProgressVisible => State is LauncherState.Downloading or LauncherState.Applying
+                                     or LauncherState.Checking or LauncherState.Installing;
     public bool IsActionEnabled => State is LauncherState.UpdateAvailable or LauncherState.Ready
                                     or LauncherState.Error or LauncherState.NeedGameRoot;
 
@@ -145,8 +152,15 @@ public class HomeViewModel : ViewModelBase
             }
             else
             {
+                // Try to load updateinfo.ini from alongside the launcher
+                var localUpdateInfo = Path.Combine(cwd, "updateinfo.ini");
+                if (File.Exists(localUpdateInfo))
+                {
+                    _updateInfoConfig = UpdateInfoConfig.Load(localUpdateInfo);
+                }
+
                 State = LauncherState.NeedGameRoot;
-                StatusText = "Game installation not found. Please locate your game folder.";
+                StatusText = "Game not installed. Click INSTALL to download and set up the game.";
                 return;
             }
         }
@@ -257,8 +271,7 @@ public class HomeViewModel : ViewModelBase
         switch (State)
         {
             case LauncherState.NeedGameRoot:
-                // This will be handled by the MainViewModel via event
-                OnGameRootRequested?.Invoke();
+                await InstallFullGameAsync();
                 break;
 
             case LauncherState.UpdateAvailable:
@@ -370,6 +383,109 @@ public class HomeViewModel : ViewModelBase
     }
 
     public event Action? OnGameRootRequested;
+
+    /// <summary>
+    /// Full game installation flow — downloads the complete game from the CDN.
+    /// </summary>
+    private async Task InstallFullGameAsync()
+    {
+        State = LauncherState.Installing;
+        _cts = new CancellationTokenSource();
+
+        var progress = new Progress<DownloadProgress>(p =>
+        {
+            ProgressPercent = p.ProgressPercent;
+            StatusText = p.StatusText;
+            DownloadSpeed = DownloadService.FormatSpeed(p.SpeedBytesPerSecond);
+            Eta = p.EstimatedTimeRemaining.TotalSeconds > 0
+                ? $"ETA: {p.EstimatedTimeRemaining:mm\\:ss}"
+                : string.Empty;
+        });
+
+        try
+        {
+            // Determine FullFileAddress
+            var fullFileAddr = _updateInfoConfig?.FullFileAddress;
+
+            if (string.IsNullOrEmpty(fullFileAddr))
+            {
+                // Try to fetch updateinfo.ini from alongside the launcher
+                var cwd = AppDomain.CurrentDomain.BaseDirectory;
+                var localUpdateInfo = Path.Combine(cwd, "updateinfo.ini");
+                if (File.Exists(localUpdateInfo))
+                {
+                    _updateInfoConfig = UpdateInfoConfig.Load(localUpdateInfo);
+                    fullFileAddr = _updateInfoConfig.FullFileAddress;
+                }
+            }
+
+            if (string.IsNullOrEmpty(fullFileAddr))
+            {
+                LogService.LogError("No FullFileAddress configured. Cannot install.");
+                State = LauncherState.Error;
+                StatusText = "No download URL configured. Please place updateinfo.ini next to the launcher.";
+                return;
+            }
+
+            // Install to the launcher's own directory
+            var installDir = AppDomain.CurrentDomain.BaseDirectory;
+            LogService.Log($"Installing game to: {installDir}");
+
+            StatusText = "Preparing installation...";
+
+            var gameRoot = await _installService.InstallFullGameAsync(
+                installDir, fullFileAddr, progress, _cts.Token);
+
+            if (gameRoot != null)
+            {
+                _localState.GameRootPath = gameRoot;
+                _localState.Save();
+
+                // Copy updateinfo.ini into the game root so future launches can find update URLs
+                try
+                {
+                    var launcherDir = AppDomain.CurrentDomain.BaseDirectory;
+                    var srcUpdateInfo = Path.Combine(launcherDir, "updateinfo.ini");
+                    if (File.Exists(srcUpdateInfo))
+                    {
+                        var destUpdateInfo = Path.Combine(gameRoot, "updateinfo.ini");
+                        File.Copy(srcUpdateInfo, destUpdateInfo, overwrite: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.LogError("Failed to copy updateinfo.ini to game root", ex);
+                }
+
+                // Load the version from the freshly installed files
+                LoadLocalVersion();
+
+                StatusText = "Installation complete! Checking for updates...";
+                ProgressPercent = 100;
+                DownloadSpeed = string.Empty;
+                Eta = string.Empty;
+
+                // Seamlessly transition to update check
+                await CheckForUpdatesAsync();
+            }
+            else
+            {
+                State = LauncherState.Error;
+                StatusText = "Installation failed. Check logs for details.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            State = LauncherState.NeedGameRoot;
+            StatusText = "Installation cancelled.";
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError("Installation failed", ex);
+            State = LauncherState.Error;
+            StatusText = $"Installation failed: {ex.Message}";
+        }
+    }
 
     private static string? FindGameRoot(string startDir)
     {
