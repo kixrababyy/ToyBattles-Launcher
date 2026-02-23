@@ -25,21 +25,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Assets folder: copied alongside the exe so users can swap logo/banner images -->
-    <Content Include="Assets\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
+    <!-- Assets: embedded inside the exe; disk files override if present -->
+    <EmbeddedResource Include="Assets\**">
+      <LogicalName>Assets/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Wallpapers folder: copied alongside the exe so users can swap images -->
-    <Content Include="wallpapers\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
+    <!-- Wallpapers: embedded inside the exe; disk files override if present -->
+    <EmbeddedResource Include="wallpapers\**" Exclude="wallpapers\.gitkeep">
+      <LogicalName>wallpapers/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

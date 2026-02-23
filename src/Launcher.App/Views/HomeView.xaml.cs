@@ -24,38 +24,34 @@ public partial class HomeView : UserControl
     }
 
     /// <summary>
-    /// Checks for Assets/banner.png (or .jpg/.webp) in the app directory.
-    /// If found, shows the image and hides the text fallback.
-    /// To customise: just drop your banner image into the Assets folder as "banner.png".
+    /// Loads the banner from disk (Assets/banner.*) or embedded resource.
+    /// Disk file wins if present, allowing user overrides.
     /// </summary>
     private void LoadBannerImage()
     {
         var baseDir = AppContext.BaseDirectory;
         string[] extensions = [".png", ".jpg", ".jpeg", ".webp"];
 
+        BitmapImage? img = null;
+
+        // Try disk files first
         foreach (var ext in extensions)
         {
             var bannerPath = Path.Combine(baseDir, "Assets", $"banner{ext}");
-            if (!File.Exists(bannerPath)) continue;
-
-            try
+            if (File.Exists(bannerPath))
             {
-                var img = new BitmapImage();
-                img.BeginInit();
-                img.UriSource = new Uri(bannerPath, UriKind.Absolute);
-                img.CacheOption = BitmapCacheOption.OnLoad;
-                img.EndInit();
-                img.Freeze();
-
-                BannerImage.Source = img;
-                BannerImage.Visibility = Visibility.Visible;
-                BannerTextFallback.Visibility = Visibility.Collapsed;
-                return;
-            }
-            catch
-            {
-                // If image fails to load, keep the text fallback
+                try { img = EmbeddedImageLoader.LoadFromFile(bannerPath); } catch { }
+                if (img != null) break;
             }
         }
+
+        // Fall back to embedded resource
+        img ??= EmbeddedImageLoader.LoadFromResource("Assets/banner.png");
+
+        if (img == null) return;
+
+        BannerImage.Source = img;
+        BannerImage.Visibility = Visibility.Visible;
+        BannerTextFallback.Visibility = Visibility.Collapsed;
     }
 }

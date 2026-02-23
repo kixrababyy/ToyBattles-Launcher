@@ -15,7 +15,7 @@ public partial class MainWindow : Window
 
     // Wallpaper slideshow state
     private readonly DispatcherTimer _wallpaperTimer = new();
-    private List<string> _wallpapers = new();
+    private List<BitmapImage> _wallpapers = new();
     private int _currentIndex = 0;
     private bool _showingA = true;
 
@@ -51,52 +51,52 @@ public partial class MainWindow : Window
     // ──────────────────────────────────────────────
 
     /// <summary>
-    /// Checks for Assets/logo.png (or .jpg/.webp) in the app directory.
-    /// If found, shows the image in the sidebar and hides the "TB" text fallback.
-    /// To customise: drop your logo image into the Assets folder as "logo.png".
+    /// Loads the logo from disk (Assets/logo.png) or embedded resource.
+    /// Disk file wins if present, allowing user overrides.
     /// </summary>
     private void LoadLogoImage()
     {
         var baseDir = AppContext.BaseDirectory;
         string[] extensions = [".png", ".jpg", ".jpeg", ".webp"];
 
+        BitmapImage? img = null;
+
+        // Try disk files first
         foreach (var ext in extensions)
         {
             var logoPath = Path.Combine(baseDir, "Assets", $"logo{ext}");
-            if (!File.Exists(logoPath)) continue;
+            if (File.Exists(logoPath))
+            {
+                try { img = EmbeddedImageLoader.LoadFromFile(logoPath); } catch { }
+                if (img != null) break;
+            }
+        }
 
+        // Fall back to embedded resource
+        img ??= EmbeddedImageLoader.LoadFromResource("Assets/logo.png");
+
+        if (img == null) return;
+
+        var loadedImg = img;
+        Dispatcher.BeginInvoke(() =>
+        {
             try
             {
-                var img = LoadImage(logoPath);
+                var logoImage = FindTemplateChild<System.Windows.Controls.Image>(this, "LogoImage");
+                var logoText = FindTemplateChild<System.Windows.Controls.TextBlock>(this, "LogoTextFallback");
 
-                // The Image and TextBlock are inside a ControlTemplate,
-                // so we need to find them through the visual tree
-                var logoButton = FindName("LogoButton") as System.Windows.Controls.Button;
-                // Since we can't FindName inside templates easily,
-                // walk the visual tree after template is applied
-                Dispatcher.BeginInvoke(() =>
+                if (logoImage != null)
                 {
-                    try
-                    {
-                        var logoImage = FindTemplateChild<System.Windows.Controls.Image>(this, "LogoImage");
-                        var logoText = FindTemplateChild<System.Windows.Controls.TextBlock>(this, "LogoTextFallback");
-
-                        if (logoImage != null)
-                        {
-                            logoImage.Source = img;
-                            logoImage.Visibility = Visibility.Visible;
-                        }
-                        if (logoText != null)
-                        {
-                            logoText.Visibility = Visibility.Collapsed;
-                        }
-                    }
-                    catch { /* Keep text fallback */ }
-                }, System.Windows.Threading.DispatcherPriority.Loaded);
-                return;
+                    logoImage.Source = loadedImg;
+                    logoImage.Visibility = Visibility.Visible;
+                }
+                if (logoText != null)
+                {
+                    logoText.Visibility = Visibility.Collapsed;
+                }
             }
             catch { /* Keep text fallback */ }
-        }
+        }, DispatcherPriority.Loaded);
     }
 
     /// <summary>
@@ -124,25 +124,45 @@ public partial class MainWindow : Window
 
     private void InitWallpaperSlideshow()
     {
-        var wallpaperDir = Path.Combine(AppContext.BaseDirectory, "wallpapers");
-        if (!Directory.Exists(wallpaperDir))
-            return;
+        _wallpapers = new List<BitmapImage>();
 
-        _wallpapers = Directory
-            .EnumerateFiles(wallpaperDir)
-            .Where(f =>
+        // 1) Try disk wallpapers first (allows user override)
+        var wallpaperDir = Path.Combine(AppContext.BaseDirectory, "wallpapers");
+        if (Directory.Exists(wallpaperDir))
+        {
+            var files = Directory
+                .EnumerateFiles(wallpaperDir)
+                .Where(f =>
+                {
+                    var ext = Path.GetExtension(f).ToLowerInvariant();
+                    return ext is ".png" or ".jpg" or ".jpeg" or ".webp";
+                })
+                .OrderBy(f => f);
+
+            foreach (var file in files)
             {
-                var ext = Path.GetExtension(f).ToLowerInvariant();
-                return ext is ".png" or ".jpg" or ".jpeg" or ".webp";
-            })
-            .OrderBy(f => f)
-            .ToList();
+                try { _wallpapers.Add(EmbeddedImageLoader.LoadFromFile(file)); }
+                catch { /* skip */ }
+            }
+        }
+
+        // 2) If no disk wallpapers, use embedded resources
+        if (_wallpapers.Count == 0)
+        {
+            var names = EmbeddedImageLoader.GetResourceNames("wallpapers/");
+            foreach (var name in names)
+            {
+                var img = EmbeddedImageLoader.LoadFromResource(name);
+                if (img != null)
+                    _wallpapers.Add(img);
+            }
+        }
 
         if (_wallpapers.Count == 0)
             return;
 
         // Show first wallpaper immediately
-        WallpaperA.Source = LoadImage(_wallpapers[0]);
+        WallpaperA.Source = _wallpapers[0];
         WallpaperA.Opacity = 1;
 
         if (_wallpapers.Count == 1)
@@ -163,7 +183,7 @@ public partial class MainWindow : Window
 
         if (_showingA)
         {
-            WallpaperB.Source = LoadImage(_wallpapers[_currentIndex]);
+            WallpaperB.Source = _wallpapers[_currentIndex];
             WallpaperB.BeginAnimation(OpacityProperty,
                 new DoubleAnimation(0, 1, duration) { EasingFunction = easing });
             WallpaperA.BeginAnimation(OpacityProperty,
@@ -171,7 +191,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            WallpaperA.Source = LoadImage(_wallpapers[_currentIndex]);
+            WallpaperA.Source = _wallpapers[_currentIndex];
             WallpaperA.BeginAnimation(OpacityProperty,
                 new DoubleAnimation(0, 1, duration) { EasingFunction = easing });
             WallpaperB.BeginAnimation(OpacityProperty,
@@ -179,18 +199,6 @@ public partial class MainWindow : Window
         }
 
         _showingA = !_showingA;
-    }
-
-    private static BitmapImage LoadImage(string path)
-    {
-        var img = new BitmapImage();
-        img.BeginInit();
-        img.UriSource = new Uri(path, UriKind.Absolute);
-        img.CacheOption = BitmapCacheOption.OnLoad;
-        img.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-        img.EndInit();
-        img.Freeze();
-        return img;
     }
 
     // ──────────────────────────────────────────────
