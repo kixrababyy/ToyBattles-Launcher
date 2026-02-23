@@ -1,6 +1,6 @@
-# ToyBattles Launcher (WPF)
+# ToyBattles Launcher
 
-A modern, dark-themed game launcher built with WPF and .NET 8. Features automatic update checking, patching, file repair, and game launching.
+A modern, dark-themed WPF game launcher for **ToyBattles: MicroVolts Recharged**. Features automatic updates, full game installation, file repair, floating particle effects, and animated download UI.
 
 ---
 
@@ -16,86 +16,42 @@ dotnet run --project src/Launcher.App
 # Test
 dotnet test ToyBattlesLauncher.slnx
 
-# Release build
-dotnet publish src/Launcher.App -c Release -o publish/
+# Publish (single-file .exe, no .NET runtime needed)
+dotnet publish src/Launcher.App/Launcher.App.csproj -c Release -o publish/single-file
 ```
 
 ---
 
-## How to Use This Launcher for Your Own Game
+## Distribution
 
-### 1. Set Up Your Game Folder Structure
+Publishing produces a **self-contained single-file exe** — users don't need .NET installed.
 
-The launcher expects your game to be installed in a folder like this:
+Ship these files together:
 
-```
-MyGame/
-├── Bin/
-│   └── MyGame.exe         ← your game executable
-├── patch.ini              ← version list (local copy)
-├── patchLauncher.ini      ← launcher version
-├── updateinfo.ini         ← update server URL
-└── Launcher.App.exe       ← this launcher (published)
-```
+| File | Size | Purpose |
+|------|------|---------|
+| `Launcher.exe` | ~68 MB | The launcher (everything bundled) |
+| `Assets/` | ~2 MB | Logo + banner images (user-swappable) |
+| `wallpapers/` | ~33 MB | Background slideshow images (user-swappable) |
+| `updateinfo.ini` | <1 KB | Update server URLs |
 
-### 2. Configure `updateinfo.ini`
+The `.pdb` files in the publish output are debug symbols — don't ship them.
 
-This tells the launcher where to download updates from:
+---
 
-```ini
-[CONFIG]
-UpdateAddress=http://your-cdn.com/updates
-FullDownloadAddress=http://your-cdn.com/full
-```
+## Features
 
-Replace the URLs with your own CDN or file server.
-
-### 3. Configure `patch.ini` (on your server)
-
-This file lists all available versions. Put it on your update server so the launcher can fetch it. The launcher compares the local version against the remote version list.
-
-```ini
-[VERSION]
-ENG_1.0.0.1=1
-ENG_1.0.0.2=2
-ENG_1.0.0.3=3
-```
-
-Each line is `VersionString=OrderNumber`. The highest number is the latest version.
-
-### 4. Host Patch Files on Your Server
-
-For each version step, create a `.cab` archive containing the changed files:
-
-```
-http://your-cdn.com/updates/ENG_1.0.0.1_ENG_1.0.0.2.cab
-http://your-cdn.com/updates/ENG_1.0.0.2_ENG_1.0.0.3.cab
-```
-
-The launcher downloads and extracts these sequentially to upgrade from any version to the latest.
-
-### 5. Customize the Launcher
-
-#### Change the game name and branding:
-- **Window title**: `MainWindow.xaml` → `Title="..."`
-- **Logo text**: `MainWindow.xaml` → search for `TOY` and `BATTLES` TextBlocks
-- **Banner text**: `HomeView.xaml` → search for `TOYBATTLES` and `MicroVolts Recharged`
-- **Links**: `MainViewModel.cs` → update Discord/website URLs in `NavigateNewsCommand` and `NavigateDiscordCommand`
-
-#### Change the game executable:
-- **`LaunchService.cs`** → change `Bin\\MicroVolts.exe` to your game's exe path
-
-#### Change theme colors:
-- **`Dark.xaml`** → edit the color palette at the top (AccentGold, GlowPurple, etc.)
-
-### 6. Publish and Distribute
-
-```powershell
-# Create a self-contained single-file executable
-dotnet publish src/Launcher.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish/
-```
-
-This creates a single `Launcher.App.exe` you can ship alongside your game. Place it in the game root folder with the INI config files.
+- **Full game install** — downloads and extracts the complete game archive for first-time users
+- **Step-by-step patching** — compares local vs remote versions, downloads `.cab` patches, applies them sequentially
+- **File repair** — verifies critical game files and re-downloads missing/corrupt ones
+- **Floating particles** — 45 animated particles drift across the background in brand colors
+- **Animated download card** — glassmorphic panel slides in with progress bar, speed, ETA, and percentage
+- **Shimmer progress bar** — 6px gradient bar with animated light sweep effect
+- **Wallpaper slideshow** — rotates background images with crossfade transitions every 9 seconds
+- **Ambient orbs** — 4 breathing radial glow orbs that pulse and scale behind the content
+- **Dark theme** — deep navy/blue palette with sky-blue and gold accents
+- **MVVM architecture** — clean separation between WPF UI and core logic
+- **Logging** — daily rotating log files in `%LOCALAPPDATA%\ToyBattlesLauncher\logs\`
 
 ---
 
@@ -104,36 +60,112 @@ This creates a single `Launcher.App.exe` you can ship alongside your game. Place
 ```
 ToyBattlesLauncher.slnx
 ├── src/
-│   ├── Launcher.Core/          ← Core logic (no UI dependency)
-│   │   ├── Config/             ← INI parsers (patch.ini, updateinfo.ini)
-│   │   ├── Models/             ← GameVersion, LocalState
-│   │   └── Services/           ← Download, Patch, Repair, Launch, Log
-│   └── Launcher.App/           ← WPF UI
-│       ├── Themes/Dark.xaml    ← Color palette and control styles
-│       ├── Views/              ← XAML pages (Home, Settings, Repair)
-│       ├── ViewModels/         ← MVVM ViewModels
-│       └── Converters/         ← XAML value converters
+│   ├── Launcher.Core/              ← Core logic (no UI dependency)
+│   │   ├── Config/                 ← INI parsers (patch.ini, updateinfo.ini)
+│   │   │   ├── IniParser.cs        ← Generic [section] key=value parser
+│   │   │   ├── PatchConfig.cs      ← Parses patch.ini version list
+│   │   │   ├── PatchLauncherConfig.cs
+│   │   │   └── UpdateInfoConfig.cs ← Parses updateinfo.ini server URLs
+│   │   ├── Models/
+│   │   │   ├── GameVersion.cs      ← ENG_X.Y.Z.W version parsing & comparison
+│   │   │   └── LocalState.cs       ← Persisted JSON state (install path, version)
+│   │   └── Services/
+│   │       ├── DownloadService.cs   ← HTTP downloads with retry, progress, speed/ETA
+│   │       ├── InstallService.cs    ← Full game install (download + extract ZIP/CAB)
+│   │       ├── LaunchService.cs     ← Launches MicroVolts.exe with correct working dir
+│   │       ├── LogService.cs        ← Thread-safe daily rotating file logger
+│   │       ├── PatchService.cs      ← Step-by-step patching pipeline
+│   │       └── RepairService.cs     ← File verification and re-download
+│   └── Launcher.App/               ← WPF UI
+│       ├── Assets/                  ← logo.png, banner.png (user-swappable)
+│       ├── Themes/Dark.xaml         ← Color palette, button/progress bar styles
+│       ├── Views/
+│       │   ├── MainWindow.xaml      ← Shell: sidebar nav, wallpaper slideshow, orbs
+│       │   ├── HomeView.xaml        ← Main page: play button, download card, versions
+│       │   ├── SettingsView.xaml    ← Game path, launch args, log viewer
+│       │   ├── RepairView.xaml     ← File verification UI
+│       │   └── ParticleCanvas.cs    ← Floating particle renderer (~60fps)
+│       ├── ViewModels/              ← MVVM ViewModels
+│       │   ├── HomeViewModel.cs     ← Update check, download, install, launch logic
+│       │   ├── MainViewModel.cs     ← Navigation, window commands
+│       │   ├── SettingsViewModel.cs
+│       │   └── RepairViewModel.cs
+│       ├── Converters/              ← XAML value converters
+│       └── wallpapers/              ← Background images (user-swappable)
 └── tests/
-    └── Launcher.Core.Tests/    ← 33 xUnit tests
+    └── Launcher.Core.Tests/         ← 33 xUnit tests
+        ├── GameVersionTests.cs
+        ├── IniParserTests.cs
+        └── PatchServiceTests.cs
 ```
 
-## Config Files (Examples)
+---
 
-| File | Purpose |
-|------|---------|
-| `updateinfo.ini` | Base URL for downloading updates |
-| `patch.ini` | Version list — local copy shows installed version, remote copy shows latest |
-| `patchLauncher.ini` | Launcher's own version string |
+## Config Files
 
-## Features
+| File | Format | Purpose |
+|------|--------|---------|
+| `updateinfo.ini` | INI | Update server base URL + full file download URL |
+| `patch.ini` | INI | Version list — `version` = latest, `version1..N` = known versions |
+| `patchLauncher.ini` | INI | Launcher's own version string |
 
-- **Auto-update**: Compares local vs remote versions, downloads `.cab` patches, applies them
-- **File repair**: Verifies critical files and re-downloads corrupted ones
-- **Modern UI**: Dark theme, gold accents, purple glow effects, fade-in animations
-- **MVVM architecture**: Clean separation between UI and logic
-- **Logging**: Daily rotating log files in `logs/` folder
+### `updateinfo.ini` Example
+
+```ini
+[update]
+addr = http://cdn.toybattles.net/ENG
+
+[FullFile]
+addr = http://cdn.toybattles.net/update/ENG/Full/
+```
+
+### `patch.ini` Example
+
+```ini
+[patch]
+version = ENG_2.0.4.3
+version1 = ENG_2.0.4.2
+version2 = ENG_2.0.4.1
+exe = bin/MicroVolts.exe
+```
+
+---
+
+## How the Install/Update Pipeline Works
+
+1. **First launch (no game found)** → shows **INSTALL** button
+2. Fetches `updateinfo.ini` → gets `FullFileAddress`
+3. Downloads full game archive (ZIP or CAB) from the CDN
+4. Extracts to the launcher's directory
+5. Searches for `Bin/MicroVolts.exe` up to 2 levels deep
+6. Copies `updateinfo.ini` into the game root for future launches
+7. Transitions to **update check** → fetches remote `patch.ini`
+8. Compares installed version vs latest → downloads step-by-step `.cab` patches if needed
+9. Shows **PLAY** when up to date
+
+---
+
+## Customization
+
+### Branding
+- **Window title**: `MainWindow.xaml` → `Title="..."`
+- **Logo**: drop `logo.png` into `Assets/` (46×46, shown in sidebar)
+- **Banner**: drop `banner.png` into `Assets/` (shown on home page)
+- **Text fallback**: `MainWindow.xaml` → `TOY` / `BATTLES` TextBlocks
+- **Links**: `MainViewModel.cs` → Discord/website URLs
+
+### Game Executable
+- **`LaunchService.cs`** → change `Bin\\MicroVolts.exe` to your game's exe path
+
+### Theme Colors
+- **`Dark.xaml`** → edit the color palette at the top (`AccentBlue`, `AccentGold`, etc.)
+
+### Backgrounds
+- Drop `.png`/`.jpg` images into the `wallpapers/` folder — the launcher auto-rotates them
+
+---
 
 ## Requirements
 
-- .NET 8 SDK (for building)
-- Windows 10/11 (WPF is Windows-only)
+- **.NET 8 SDK** — for building (users don't need it — the published exe is self-contained)
+- **Windows 10/11** — WPF is Windows-only
