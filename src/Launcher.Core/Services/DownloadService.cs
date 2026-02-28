@@ -29,6 +29,12 @@ public class DownloadService
         Timeout = TimeSpan.FromMinutes(10)
     };
 
+    /// <summary>
+    /// Optional download speed cap in bytes/sec. 0 = unlimited.
+    /// Set via Settings → Max download speed (MB/s).
+    /// </summary>
+    public static long MaxBytesPerSecond { get; set; } = 0;
+
     private const int MaxRetries = 6;
     private const int BufferSize = 81920; // 80KB chunks
 
@@ -69,6 +75,15 @@ public class DownloadService
                 {
                     await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), ct);
                     totalRead += bytesRead;
+
+                    // Throttle if a speed cap is configured
+                    if (MaxBytesPerSecond > 0)
+                    {
+                        var expectedMs = (long)(totalRead * 1000.0 / MaxBytesPerSecond);
+                        var delayMs = (int)(expectedMs - (long)sw.Elapsed.TotalMilliseconds);
+                        if (delayMs > 0)
+                            await Task.Delay(delayMs, ct);
+                    }
 
                     if (progress != null)
                     {
@@ -139,6 +154,26 @@ public class DownloadService
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Download raw bytes from a URL (e.g. for checksum comparison).
+    /// </summary>
+    public async Task<byte[]?> DownloadBytesAsync(string url, CancellationToken ct = default)
+    {
+        try
+        {
+            return await HttpClient.GetByteArrayAsync(url, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError($"Failed to download bytes from {url}", ex);
+            return null;
+        }
     }
 
     public static string FormatBytes(long bytes)

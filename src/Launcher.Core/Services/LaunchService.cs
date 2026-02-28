@@ -12,7 +12,8 @@ public class LaunchService
     /// </summary>
     /// <param name="gameRootPath">Root path of the game installation.</param>
     /// <param name="arguments">Optional command-line arguments.</param>
-    public static bool Launch(string gameRootPath, string? arguments = null)
+    /// <returns>The launched Process on success, or null on failure. Caller is responsible for disposing.</returns>
+    public static Process? Launch(string gameRootPath, string? arguments = null)
     {
         var exePath = Path.Combine(gameRootPath, "Bin", "MicroVolts.exe");
         var workingDir = gameRootPath;
@@ -20,7 +21,7 @@ public class LaunchService
         if (!File.Exists(exePath))
         {
             LogService.LogError($"Game executable not found: {exePath}");
-            return false;
+            return null;
         }
 
         try
@@ -37,14 +38,20 @@ public class LaunchService
             if (!string.IsNullOrWhiteSpace(arguments))
                 psi.Arguments = arguments;
 
-            Process.Start(psi);
-            LogService.Log("Game launched successfully.");
-            return true;
+            var proc = Process.Start(psi);
+            if (proc == null)
+            {
+                LogService.LogError("Process.Start returned null");
+                return null;
+            }
+
+            LogService.Log($"Game launched successfully (PID {proc.Id}).");
+            return proc;
         }
         catch (Exception ex)
         {
             LogService.LogError("Failed to launch game", ex);
-            return false;
+            return null;
         }
     }
 

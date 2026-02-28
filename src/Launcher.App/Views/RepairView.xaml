@@ -70,12 +70,18 @@
                                TextWrapping="Wrap"
                                Margin="0,0,0,16"/>
 
-                    <!-- Progress bar (when repairing) -->
+                    <!-- Progress bar + current file (when repairing) -->
                     <StackPanel Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"
                                 Margin="0,0,0,16">
                         <ProgressBar Value="{Binding ProgressPercent}"
                                      Minimum="0" Maximum="100"
                                      Style="{StaticResource AccentProgressBar}"/>
+                        <TextBlock Text="{Binding CurrentFileText}"
+                                   FontSize="11" FontFamily="Segoe UI"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,6,0,0"
+                                   Visibility="{Binding CurrentFileText, Converter={StaticResource StringToVis}}"/>
                     </StackPanel>
 
                     <!-- Results summary -->
@@ -90,12 +96,36 @@
                                    TextWrapping="Wrap" LineHeight="20"/>
                     </Border>
 
-                    <!-- Repair button -->
-                    <Button Content="Verify &amp; Repair Files"
-                            Command="{Binding RepairCommand}"
-                            IsEnabled="{Binding IsRepairEnabled}"
-                            Style="{StaticResource PrimaryButton}"
-                            HorizontalAlignment="Left"/>
+                    <!-- Action buttons -->
+                    <WrapPanel>
+                        <Button Content="Verify &amp; Repair Files"
+                                Command="{Binding RepairCommand}"
+                                IsEnabled="{Binding IsRepairEnabled}"
+                                Style="{StaticResource PrimaryButton}"
+                                Margin="0,0,10,8"/>
+                        <Button Content="Full Reinstall"
+                                Command="{Binding FullReinstallCommand}"
+                                IsEnabled="{Binding IsReinstallEnabled}"
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,0,10,8"/>
+                        <Button Content="Clear Cache"
+                                Command="{Binding ClearCacheCommand}"
+                                IsEnabled="{Binding IsRepairEnabled}"
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,0,10,8"/>
+                        <Button Content="Cancel"
+                                Command="{Binding CancelCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,0,0,8"
+                                Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"/>
+                    </WrapPanel>
+
+                    <!-- Cache size feedback -->
+                    <TextBlock Text="{Binding CacheSizeText}"
+                               FontSize="11" FontFamily="Segoe UI"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Margin="0,6,0,0"
+                               Visibility="{Binding CacheSizeText, Converter={StaticResource StringToVis}}"/>
                 </StackPanel>
             </Border>
 

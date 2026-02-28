@@ -12,6 +12,7 @@ namespace Launcher.App.Views;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private Hardcodet.Wpf.TaskbarNotification.TaskbarIcon? _trayIcon;
 
     // Wallpaper slideshow state
     private readonly DispatcherTimer _wallpaperTimer = new();
@@ -29,21 +30,69 @@ public partial class MainWindow : Window
         // Wire up the folder browse request from Settings
         _viewModel.SettingsVM.BrowseFolderRequested += OnBrowseFolder;
 
-        // Wire up game root request from Home
-        _viewModel.HomeVM.OnGameRootRequested += OnGameRootRequested;
+        // Wire up install folder picker request from Home and Repair
+        _viewModel.HomeVM.OnInstallFolderRequested += OnInstallFolderRequested;
+        _viewModel.RepairVM.OnInstallFolderRequested += OnInstallFolderRequested;
+
+        // Restore window when game exits
+        _viewModel.HomeVM.RestoreWindowRequested += RestoreFromTray;
+
+        // Show tray balloon when update completes
+        _viewModel.HomeVM.ShowBalloonRequested += (title, msg) =>
+        {
+            if (!IsVisible)
+                _trayIcon?.ShowBalloonTip(title, msg, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        };
 
         Loaded += async (_, _) =>
         {
             await _viewModel.InitializeAsync();
             InitWallpaperSlideshow();
             LoadLogoImage();
+            InitTrayIcon();
+            ApplyRoundClip();
+            InnerGrid.SizeChanged += (_, _) => ApplyRoundClip();
         };
+
+        // Minimize to tray instead of taskbar when minimized
+        StateChanged += (_, _) =>
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+                if (_trayIcon != null)
+                    _trayIcon.Visibility = Visibility.Visible;
+            }
+        };
+
+        // Clean up on close
+        Closed += (_, _) =>
+        {
+            _trayIcon?.Dispose();
+        };
+    }
+
+    private void ApplyRoundClip()
+    {
+        const double radius = 16;
+        var geo = InnerGrid.Clip as System.Windows.Media.RectangleGeometry
+               ?? new System.Windows.Media.RectangleGeometry();
+        geo.Rect    = new Rect(0, 0, InnerGrid.ActualWidth, InnerGrid.ActualHeight);
+        geo.RadiusX = radius;
+        geo.RadiusY = radius;
+        InnerGrid.Clip = geo;
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 1)
             DragMove();
+    }
+
+    private void BannerOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _viewModel.NavigateHomeCommand.Execute(null);
+        e.Handled = true;
     }
 
     // ──────────────────────────────────────────────
@@ -168,8 +217,8 @@ public partial class MainWindow : Window
         if (_wallpapers.Count == 1)
             return;
 
-        // Cycle every 9 seconds
-        _wallpaperTimer.Interval = TimeSpan.FromSeconds(9);
+        // Cycle every 5 seconds
+        _wallpaperTimer.Interval = TimeSpan.FromSeconds(5);
         _wallpaperTimer.Tick += OnWallpaperTick;
         _wallpaperTimer.Start();
     }
@@ -179,7 +228,7 @@ public partial class MainWindow : Window
         _currentIndex = (_currentIndex + 1) % _wallpapers.Count;
 
         var easing = new CubicEase { EasingMode = EasingMode.EaseInOut };
-        var duration = new Duration(TimeSpan.FromSeconds(1.8));
+        var duration = new Duration(TimeSpan.FromSeconds(0.8));
 
         if (_showingA)
         {
@@ -205,6 +254,19 @@ public partial class MainWindow : Window
     //  Game folder dialogs
     // ──────────────────────────────────────────────
 
+    private string? OnInstallFolderRequested()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Select Installation Directory"
+        };
+
+        if (dialog.ShowDialog() == true)
+            return dialog.FolderName;
+
+        return null;
+    }
+
     private string? OnBrowseFolder()
     {
         var dialog = new OpenFolderDialog
@@ -218,12 +280,56 @@ public partial class MainWindow : Window
         return null;
     }
 
-    private void OnGameRootRequested()
+    // ──────────────────────────────────────────────
+    //  System Tray
+    // ──────────────────────────────────────────────
+
+    private void InitTrayIcon()
     {
-        var folder = OnBrowseFolder();
-        if (!string.IsNullOrEmpty(folder))
+        _trayIcon = new Hardcodet.Wpf.TaskbarNotification.TaskbarIcon
         {
-            _viewModel.HomeVM.SetGameRoot(folder);
+            ToolTipText = "ToyBattles Launcher",
+            Visibility = Visibility.Hidden
+        };
+
+        // Try to load embedded icon
+        try
+        {
+            var iconStream = System.Reflection.Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("Assets/icon.ico");
+            if (iconStream != null)
+            {
+                var decoder = new System.Windows.Media.Imaging.IconBitmapDecoder(
+                    iconStream,
+                    System.Windows.Media.Imaging.BitmapCreateOptions.None,
+                    System.Windows.Media.Imaging.BitmapCacheOption.Default);
+                _trayIcon.IconSource = decoder.Frames[0];
+            }
         }
+        catch { /* no icon — tray icon will show default */ }
+
+        // Double-click tray icon to restore
+        _trayIcon.TrayMouseDoubleClick += (_, _) => RestoreFromTray();
+
+        // Context menu: Restore + Exit
+        var contextMenu = new System.Windows.Controls.ContextMenu();
+        var openItem = new System.Windows.Controls.MenuItem { Header = "Open Launcher" };
+        openItem.Click += (_, _) => RestoreFromTray();
+        var exitItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
+        exitItem.Click += (_, _) => Application.Current.Shutdown();
+        contextMenu.Items.Add(openItem);
+        contextMenu.Items.Add(new System.Windows.Controls.Separator());
+        contextMenu.Items.Add(exitItem);
+        _trayIcon.ContextMenu = contextMenu;
     }
+
+    private void RestoreFromTray()
+    {
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
+        if (_trayIcon != null)
+            _trayIcon.Visibility = Visibility.Hidden;
+    }
+
 }

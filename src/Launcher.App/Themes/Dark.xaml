@@ -348,9 +348,122 @@
         </Setter>
     </Style>
 
+    <!-- ==================== DARK COMBO BOX ==================== -->
+    <Style x:Key="DarkComboBox" TargetType="ComboBox">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="#0AFFFFFF"/>
+        <Setter Property="BorderBrush" Value="#12FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="9,4,24,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="110"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="FontFamily" Value="Segoe UI"/>
+                    <Setter Property="FontSize" Value="11"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Padding" Value="10,7"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border x:Name="bg" Background="{TemplateBinding Background}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#1826C0F0"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="toggleButton"
+                                      Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}"
+                                      BorderThickness="{TemplateBinding BorderThickness}"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      Focusable="False" Cursor="Hand">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="bg"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="5"/>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="#18FFFFFF"/>
+                                            <Setter TargetName="bg" Property="BorderBrush" Value="#2026C0F0"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bg" Property="BorderBrush" Value="#3026C0F0"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <!-- Selected value text -->
+                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          IsHitTestVisible="False"/>
+                        <!-- Chevron arrow -->
+                        <TextBlock Text="&#xE70D;"
+                                   FontFamily="Segoe MDL2 Assets" FontSize="8"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   Margin="0,1,8,0"
+                                   IsHitTestVisible="False"/>
+                        <!-- Dropdown popup -->
+                        <Popup x:Name="PART_Popup"
+                               AllowsTransparency="True"
+                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               Placement="Bottom"
+                               PopupAnimation="Fade"
+                               Focusable="False">
+                            <Border Background="#F0080D14"
+                                    BorderBrush="#2026C0F0"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="0,3"
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#000000" Opacity="0.75"/>
+                                </Border.Effect>
+                                <ScrollViewer>
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ==================== PROGRESS BAR — brand blue glow ==================== -->
     <Style x:Key="AccentProgressBar" TargetType="ProgressBar">
-        <Setter Property="Height" Value="6"/>
+        <Setter Property="Height" Value="8"/>
         <Setter Property="Background" Value="#0EFFFFFF"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
@@ -359,9 +472,9 @@
                     <Grid>
                         <Border x:Name="PART_Track"
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="3"/>
+                                CornerRadius="4"/>
                         <Border x:Name="PART_Indicator"
-                                CornerRadius="3"
+                                CornerRadius="4"
                                 HorizontalAlignment="Left">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
@@ -371,17 +484,41 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="12" ShadowDepth="0"
+                                <DropShadowEffect x:Name="GlowEffect"
+                                                  BlurRadius="16" ShadowDepth="0"
                                                   Color="{StaticResource AccentBlue}" Opacity="0.8"/>
                             </Border.Effect>
+                            <!-- Glow pulse animation -->
+                            <Border.Triggers>
+                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                From="12" To="24" Duration="0:0:1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                From="0.5" To="1.0" Duration="0:0:1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Border.Triggers>
                             <!-- Shimmer overlay -->
-                            <Border CornerRadius="3" ClipToBounds="True">
-                                <Border x:Name="ShimmerBar" Width="80" Margin="-80,0,0,0"
-                                        HorizontalAlignment="Left" CornerRadius="3">
+                            <Border CornerRadius="4" ClipToBounds="True">
+                                <Border x:Name="ShimmerBar" Width="120" Margin="-120,0,0,0"
+                                        HorizontalAlignment="Left" CornerRadius="4">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
                                             <GradientStop Color="Transparent" Offset="0"/>
-                                            <GradientStop Color="#44FFFFFF" Offset="0.5"/>
+                                            <GradientStop Color="#50FFFFFF" Offset="0.5"/>
                                             <GradientStop Color="Transparent" Offset="1"/>
                                         </LinearGradientBrush>
                                     </Border.Background>
@@ -391,8 +528,8 @@
                                                 <Storyboard RepeatBehavior="Forever">
                                                     <ThicknessAnimation
                                                         Storyboard.TargetProperty="Margin"
-                                                        From="-80,0,0,0" To="1200,0,0,0"
-                                                        Duration="0:0:2.5">
+                                                        From="-120,0,0,0" To="1200,0,0,0"
+                                                        Duration="0:0:2">
                                                         <ThicknessAnimation.EasingFunction>
                                                             <SineEase EasingMode="EaseInOut"/>
                                                         </ThicknessAnimation.EasingFunction>
@@ -429,6 +566,82 @@
                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                                    Width="3"
                                    Margin="2,0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ==================== ACCENT SLIDER ==================== -->
+    <Style x:Key="AccentSlider" TargetType="Slider">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center" Margin="0,4">
+                        <!-- Full-width background track -->
+                        <Border Height="4" CornerRadius="2" Background="#20FFFFFF" VerticalAlignment="Center"/>
+                        <!-- Slider track with thumb -->
+                        <Track x:Name="PART_Track" Height="16">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
+                                                    Background="{StaticResource AccentBlueBrush}">
+                                                <Border.Effect>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="0"
+                                                                      Color="{StaticResource AccentBlue}" Opacity="0.7"/>
+                                                </Border.Effect>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge" Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="Transparent"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Width="16" Height="16">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Ellipse x:Name="circle"
+                                                     Fill="{StaticResource AccentBlueBrush}"
+                                                     Width="16" Height="16">
+                                                <Ellipse.Effect>
+                                                    <DropShadowEffect BlurRadius="10" ShadowDepth="0"
+                                                                      Color="{StaticResource AccentBlue}" Opacity="0.8"/>
+                                                </Ellipse.Effect>
+                                            </Ellipse>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="circle" Property="Effect">
+                                                        <Setter.Value>
+                                                            <DropShadowEffect BlurRadius="18" ShadowDepth="0"
+                                                                              Color="{StaticResource AccentBlue}" Opacity="1.0"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                                <Trigger Property="IsDragging" Value="True">
+                                                    <Setter TargetName="circle" Property="Effect">
+                                                        <Setter.Value>
+                                                            <DropShadowEffect BlurRadius="22" ShadowDepth="0"
+                                                                              Color="{StaticResource AccentBlue}" Opacity="1.0"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

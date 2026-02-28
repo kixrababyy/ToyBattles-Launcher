@@ -1,5 +1,7 @@
 using System.IO;
+using System.Net.Http;
 using System.Windows.Input;
+using System.Windows.Media;
 using Launcher.Core.Config;
 using Launcher.Core.Models;
 using Launcher.Core.Services;
@@ -17,7 +19,8 @@ public enum LauncherState
     Launching,
     Error,
     NeedGameRoot,
-    Installing
+    Installing,
+    VerifyingFiles
 }
 
 /// <summary>
@@ -44,6 +47,8 @@ public class HomeViewModel : ViewModelBase
                 OnPropertyChanged(nameof(ActionButtonText));
                 OnPropertyChanged(nameof(IsProgressVisible));
                 OnPropertyChanged(nameof(IsActionEnabled));
+                OnPropertyChanged(nameof(IsCancelVisible));
+                OnPropertyChanged(nameof(IsCheckUpdatesVisible));
                 OnPropertyChanged(nameof(StatusText));
             }
         }
@@ -98,6 +103,77 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _remoteVersionText, value);
     }
 
+    private string _downloadSizeText = string.Empty;
+    public string DownloadSizeText
+    {
+        get => _downloadSizeText;
+        set => SetProperty(ref _downloadSizeText, value);
+    }
+
+    private string _serverStatusText = "Checking...";
+    public string ServerStatusText
+    {
+        get => _serverStatusText;
+        set => SetProperty(ref _serverStatusText, value);
+    }
+
+    private SolidColorBrush _serverStatusBrush = new(Color.FromRgb(0xFF, 0xB8, 0x00));
+    public SolidColorBrush ServerStatusBrush
+    {
+        get => _serverStatusBrush;
+        set => SetProperty(ref _serverStatusBrush, value);
+    }
+
+    private string _launcherUpdateText = string.Empty;
+    public string LauncherUpdateText
+    {
+        get => _launcherUpdateText;
+        set => SetProperty(ref _launcherUpdateText, value);
+    }
+
+    private bool _isSettingsOpen;
+    public bool IsSettingsOpen
+    {
+        get => _isSettingsOpen;
+        set => SetProperty(ref _isSettingsOpen, value);
+    }
+
+    public static string[] ServerOptions { get; } = ["Main Build", "Test Server"];
+
+    private static readonly Dictionary<string, string> ServerAddresses = new()
+    {
+        ["Main Build"] = "https://cdn.toybattles.net/ENG",
+        ["Test Server"] = "http://127.0.0.1",
+    };
+
+    private string GetServerAddress() =>
+        ServerAddresses.TryGetValue(_selectedServer, out var addr) && !string.IsNullOrEmpty(addr)
+            ? addr : "https://cdn.toybattles.net/ENG";
+
+    /// <summary>Overrides _updateInfoConfig with URLs derived from the selected server profile.</summary>
+    private void ApplyServerProfile()
+    {
+        var addr = GetServerAddress();
+        _updateInfoConfig ??= new UpdateInfoConfig();
+        _updateInfoConfig.UpdateAddress = addr;
+        _updateInfoConfig.FullFileAddress = $"{addr}/microvolts/Full/Full.zip";
+    }
+
+    private string _selectedServer = "Main Build";
+    public string SelectedServer
+    {
+        get => _selectedServer;
+        set
+        {
+            if (SetProperty(ref _selectedServer, value))
+            {
+                _localState.ServerProfile = value;
+                _localState.Save();
+                ApplyServerProfile();
+            }
+        }
+    }
+
     public string ActionButtonText => State switch
     {
         LauncherState.Initializing => "INITIALIZING",
@@ -106,6 +182,7 @@ public class HomeViewModel : ViewModelBase
         LauncherState.Downloading => "DOWNLOADING...",
         LauncherState.Applying => "APPLYING...",
         LauncherState.Installing => "INSTALLING...",
+        LauncherState.VerifyingFiles => "VERIFYING...",
         LauncherState.Ready => "PLAY",
         LauncherState.Launching => "LAUNCHING...",
         LauncherState.Error => "RETRY",
@@ -114,9 +191,13 @@ public class HomeViewModel : ViewModelBase
     };
 
     public bool IsProgressVisible => State is LauncherState.Downloading or LauncherState.Applying
-                                     or LauncherState.Checking or LauncherState.Installing;
+                                     or LauncherState.Checking or LauncherState.Installing
+                                     or LauncherState.VerifyingFiles;
     public bool IsActionEnabled => State is LauncherState.UpdateAvailable or LauncherState.Ready
                                     or LauncherState.Error or LauncherState.NeedGameRoot;
+    public bool IsCancelVisible => State is LauncherState.Downloading or LauncherState.Installing
+                                    or LauncherState.Applying;
+    public bool IsCheckUpdatesVisible => State is LauncherState.Ready or LauncherState.Error;
 
     // Stored after check
     private PatchConfig? _remotePatch;
@@ -124,10 +205,30 @@ public class HomeViewModel : ViewModelBase
     private LocalState _localState = new();
 
     public ICommand ActionCommand { get; }
+    public ICommand CancelCommand { get; }
+    public ICommand CheckUpdatesCommand { get; }
+    public ICommand OpenLauncherDownloadCommand { get; }
+    public ICommand ToggleSettingsCommand { get; }
+
+    /// <summary>Fired when the game exits and the launcher should restore from tray.</summary>
+    public event Action? RestoreWindowRequested;
+
+    /// <summary>Fired when a tray balloon notification should be shown.</summary>
+    public event Action<string, string>? ShowBalloonRequested;
 
     public HomeViewModel()
     {
         ActionCommand = new AsyncRelayCommand(OnActionAsync);
+        CancelCommand = new RelayCommand(_ => _cts?.Cancel());
+        CheckUpdatesCommand = new AsyncRelayCommand(async () =>
+        {
+            DownloadSizeText = string.Empty;
+            await CheckForUpdatesAsync();
+        });
+        OpenLauncherDownloadCommand = new RelayCommand(_ =>
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                "https://toybattles.net/") { UseShellExecute = true }));
+        ToggleSettingsCommand = new RelayCommand(_ => IsSettingsOpen = !IsSettingsOpen);
     }
 
     /// <summary>
@@ -138,37 +239,77 @@ public class HomeViewModel : ViewModelBase
     {
         _localState = LocalState.Load();
 
-        // Try to auto-detect game root if not set
-        if (string.IsNullOrEmpty(_localState.GameRootPath) || !LaunchService.ValidateGameRoot(_localState.GameRootPath))
+        // Load updateinfo.ini — try local file first, then bootstrap from CDN
+        var cwd = AppDomain.CurrentDomain.BaseDirectory;
+        var localUpdateInfo = Path.Combine(cwd, "updateinfo.ini");
+        if (File.Exists(localUpdateInfo))
         {
-            // Try the current working directory
-            var cwd = AppDomain.CurrentDomain.BaseDirectory;
-            // Walk up to find a directory containing Bin\MicroVolts.exe
-            var candidate = FindGameRoot(cwd);
-            if (candidate != null)
-            {
-                _localState.GameRootPath = candidate;
-                _localState.Save();
-            }
-            else
-            {
-                // Try to load updateinfo.ini from alongside the launcher
-                var localUpdateInfo = Path.Combine(cwd, "updateinfo.ini");
-                if (File.Exists(localUpdateInfo))
-                {
-                    _updateInfoConfig = UpdateInfoConfig.Load(localUpdateInfo);
-                }
+            _updateInfoConfig = UpdateInfoConfig.Load(localUpdateInfo);
+        }
 
-                State = LauncherState.NeedGameRoot;
-                StatusText = "Game not installed. Click INSTALL to download and set up the game.";
-                return;
+        // If no local updateinfo.ini, try fetching from bootstrap URL
+        if (_updateInfoConfig == null || string.IsNullOrEmpty(_updateInfoConfig.FullFileAddress))
+        {
+            try
+            {
+                LogService.Log("No local updateinfo.ini found, fetching from CDN...");
+                _updateInfoConfig = await _installService.FetchUpdateInfoAsync(BootstrapUpdateInfoUrl);
             }
+            catch (Exception ex)
+            {
+                LogService.LogError("Failed to fetch updateinfo.ini from CDN", ex);
+            }
+        }
+
+        // Restore selected server profile and apply URLs — must happen before NeedGameRoot check
+        // so fresh installs use the correct FullFileAddress
+        if (!string.IsNullOrEmpty(_localState.ServerProfile) &&
+            Array.IndexOf(ServerOptions, _localState.ServerProfile) >= 0)
+            _selectedServer = _localState.ServerProfile;
+
+        ApplyServerProfile();
+
+        // Validate saved game root — clear if stale
+        if (!string.IsNullOrEmpty(_localState.GameRootPath) && !ValidateCriticalFiles(_localState.GameRootPath))
+        {
+            LogService.Log($"Stale game root path cleared: {_localState.GameRootPath}");
+            _localState.GameRootPath = null;
+            _localState.Save();
+        }
+
+        if (string.IsNullOrEmpty(_localState.GameRootPath))
+        {
+            State = LauncherState.NeedGameRoot;
+            StatusText = "Game not installed. Click INSTALL to download and set up the game.";
+            return;
         }
 
         // Load local patch.ini to get installed version
         LoadLocalVersion();
 
+        // Ping server status in background
+        _ = DoPingServerStatusAsync();
+
+        // Check for launcher self-update in background
+        _ = DoCheckLauncherVersionAsync();
+
         await CheckForUpdatesAsync();
+
+        // Verify cgd.dip against remote (Adler32) in background after update check
+        _ = CheckCgdDipAsync();
+    }
+
+    /// <summary>
+    /// Checks that critical game files exist beyond just the exe.
+    /// </summary>
+    private static bool ValidateCriticalFiles(string gameRootPath)
+    {
+        if (!LaunchService.ValidateGameRoot(gameRootPath))
+            return false;
+
+        // Check for critical data file
+        var dataFile = Path.Combine(gameRootPath, "data", "cgd.dip");
+        return File.Exists(dataFile);
     }
 
     private void LoadLocalVersion()
@@ -239,6 +380,22 @@ public class HomeViewModel : ViewModelBase
             {
                 State = LauncherState.UpdateAvailable;
                 StatusText = $"Update available: {_remotePatch.LatestVersion}";
+
+                // Try to get download size via HEAD request
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                        var patchUrl = $"{_updateInfoConfig.UpdateAddress}/{_remotePatch.LatestVersion}.zip";
+                        var req = new HttpRequestMessage(HttpMethod.Head, patchUrl);
+                        var resp = await client.SendAsync(req);
+                        if (resp.Content.Headers.ContentLength is long len && len > 0)
+                            DownloadSizeText = $"Download: ~{len / 1024 / 1024} MB";
+                    }
+                    catch { /* Size estimate not critical */ }
+                });
+
                 PatchNotes = $"🎮 ToyBattles Update\n\n" +
                              $"Current version: {installedVersion}\n" +
                              $"New version: {_remotePatch.LatestVersion}\n\n" +
@@ -293,6 +450,20 @@ public class HomeViewModel : ViewModelBase
         if (_remotePatch == null || _updateInfoConfig == null || string.IsNullOrEmpty(_localState.GameRootPath))
             return;
 
+        // Disk space check — require at least 2 GB free on the game drive
+        try
+        {
+            var drive = new DriveInfo(Path.GetPathRoot(_localState.GameRootPath)!);
+            if (drive.AvailableFreeSpace < 2L * 1024 * 1024 * 1024)
+            {
+                State = LauncherState.Error;
+                StatusText = $"Not enough disk space. At least 2 GB free is required " +
+                             $"({drive.AvailableFreeSpace / 1024 / 1024} MB available).";
+                return;
+            }
+        }
+        catch { /* Skip if drive info unavailable */ }
+
         State = LauncherState.Downloading;
         _cts = new CancellationTokenSource();
 
@@ -328,10 +499,15 @@ public class HomeViewModel : ViewModelBase
                 ProgressPercent = 100;
                 DownloadSpeed = string.Empty;
                 Eta = string.Empty;
+                DownloadSizeText = string.Empty;
 
                 PatchNotes = $"🎮 ToyBattles\n\n" +
                              $"Version: {_remotePatch.LatestVersion}\n\n" +
                              $"Update applied successfully! Click PLAY to launch.";
+
+                ShowBalloonRequested?.Invoke(
+                    "ToyBattles Updated",
+                    $"Updated to {_remotePatch.LatestVersion} — ready to play!");
             }
             else
             {
@@ -352,20 +528,149 @@ public class HomeViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Downloads the remote cgd.dip and compares its Adler32 checksum against the local copy.
+    /// Updates the local file if they differ — matches reference launcher's CheckCgdDipAsync.
+    /// </summary>
+    private async Task CheckCgdDipAsync()
+    {
+        if (string.IsNullOrEmpty(_localState.GameRootPath)) return;
+
+        var cgdLocalPath = Path.Combine(_localState.GameRootPath, "data", "cgd.dip");
+        if (!File.Exists(cgdLocalPath))
+        {
+            LogService.Log("cgd.dip not found locally, skipping check.");
+            return;
+        }
+
+        var serverAddr = GetServerAddress();
+        var cgdUrl = $"{serverAddr}/microvolts/Full/data/cgd.dip";
+
+        LogService.Log($"Checking cgd.dip from {cgdUrl}");
+
+        try
+        {
+            var remoteData = await _downloadService.DownloadBytesAsync(cgdUrl);
+            if (remoteData == null)
+            {
+                LogService.Log("Failed to download remote cgd.dip, skipping check.");
+                return;
+            }
+
+            var localData = await File.ReadAllBytesAsync(cgdLocalPath);
+            var localChecksum = PatchService.Adler32(localData);
+            var remoteChecksum = PatchService.Adler32(remoteData);
+
+            LogService.Log($"cgd.dip — local: {localData.Length} bytes ({localChecksum:x8}), remote: {remoteData.Length} bytes ({remoteChecksum:x8})");
+
+            if (localChecksum != remoteChecksum)
+            {
+                LogService.Log("cgd.dip checksum mismatch — updating...");
+                await File.WriteAllBytesAsync(cgdLocalPath, remoteData);
+                LogService.Log("cgd.dip updated successfully.");
+            }
+            else
+            {
+                LogService.Log("cgd.dip checksums match, no update needed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError("cgd.dip check failed", ex);
+        }
+    }
+
+    private async Task DoPingServerStatusAsync()
+    {
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            var response = await client.GetAsync("http://cdn.toybattles.net/");
+            var isOnline = response.IsSuccessStatusCode || (int)response.StatusCode < 500;
+            ServerStatusText = isOnline ? "Online" : "Offline";
+            ServerStatusBrush = isOnline
+                ? new SolidColorBrush(Color.FromRgb(0x2E, 0xCC, 0x71))
+                : new SolidColorBrush(Color.FromRgb(0xFF, 0x47, 0x57));
+        }
+        catch
+        {
+            ServerStatusText = "Offline";
+            ServerStatusBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0x47, 0x57));
+        }
+    }
+
+    private async Task DoCheckLauncherVersionAsync()
+    {
+        try
+        {
+            const string versionUrl = "http://cdn.toybattles.net/launcher_version.txt";
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            var text = (await client.GetStringAsync(versionUrl)).Trim();
+
+            var current = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+            if (current == null || !System.Version.TryParse(text, out var remote)) return;
+
+            if (remote > current)
+                LauncherUpdateText = $"Launcher v{remote.Major}.{remote.Minor}.{remote.Build} available (you have v{current.Major}.{current.Minor}.{current.Build}) — click Download to update.";
+        }
+        catch { /* Non-critical — silently skip if CDN doesn't have this file */ }
+    }
+
     private void LaunchGame()
     {
         if (string.IsNullOrEmpty(_localState.GameRootPath))
             return;
 
+        // Quick file integrity scan before launching
+        State = LauncherState.VerifyingFiles;
+        StatusText = "Verifying game files...";
+        ProgressPercent = 0;
+
+        if (!ValidateCriticalFiles(_localState.GameRootPath))
+        {
+            LogService.LogError($"Critical game files missing in: {_localState.GameRootPath}");
+            _localState.GameRootPath = null;
+            _localState.Save();
+            State = LauncherState.NeedGameRoot;
+            StatusText = "Game files are missing or corrupt. Click INSTALL to re-download.";
+            return;
+        }
+
+        ProgressPercent = 100;
         State = LauncherState.Launching;
         StatusText = "Launching ToyBattles...";
 
-        var success = LaunchService.Launch(_localState.GameRootPath, _localState.LaunchArguments);
-        if (success)
+        var proc = LaunchService.Launch(_localState.GameRootPath!, _localState.LaunchArguments);
+        if (proc != null)
         {
-            // Optionally close the launcher after launch
             StatusText = "Game launched!";
-            State = LauncherState.Ready;
+            if (!_localState.KeepLauncherOpen)
+            {
+                proc.Dispose();
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Background,
+                    () => System.Windows.Application.Current.Shutdown());
+            }
+            else
+            {
+                State = LauncherState.Ready;
+                StatusText = "Game is running.";
+
+                // Monitor game process — restore launcher when game exits
+                _ = Task.Run(async () =>
+                {
+                    try { await proc.WaitForExitAsync(); }
+                    catch { /* process may have already exited */ }
+                    finally { proc.Dispose(); }
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        State = LauncherState.Ready;
+                        StatusText = "Game session ended. Ready to play again.";
+                        RestoreWindowRequested?.Invoke();
+                    });
+                });
+            }
         }
         else
         {
@@ -374,21 +679,35 @@ public class HomeViewModel : ViewModelBase
         }
     }
 
-    public void SetGameRoot(string path)
-    {
-        _localState.GameRootPath = path;
-        _localState.Save();
-        LoadLocalVersion();
-        _ = CheckForUpdatesAsync();
-    }
-
-    public event Action? OnGameRootRequested;
+    public event Func<string?>? OnInstallFolderRequested;
 
     /// <summary>
     /// Full game installation flow — downloads the complete game from the CDN.
     /// </summary>
     private async Task InstallFullGameAsync()
     {
+        // Ask the user where to install via folder picker
+        var installDir = OnInstallFolderRequested?.Invoke();
+        if (string.IsNullOrEmpty(installDir))
+        {
+            // User cancelled the folder picker
+            return;
+        }
+
+        // Disk space check — require at least 5 GB free for a full install
+        try
+        {
+            var drive = new DriveInfo(Path.GetPathRoot(installDir)!);
+            if (drive.AvailableFreeSpace < 5L * 1024 * 1024 * 1024)
+            {
+                State = LauncherState.NeedGameRoot;
+                StatusText = $"Not enough disk space. At least 5 GB free is required " +
+                             $"({drive.AvailableFreeSpace / 1024 / 1024} MB available on selected drive).";
+                return;
+            }
+        }
+        catch { /* Skip if drive info unavailable */ }
+
         State = LauncherState.Installing;
         _cts = new CancellationTokenSource();
 
@@ -427,11 +746,9 @@ public class HomeViewModel : ViewModelBase
                 return;
             }
 
-            // Install to the launcher's own directory
-            var installDir = AppDomain.CurrentDomain.BaseDirectory;
             LogService.Log($"Installing game to: {installDir}");
 
-            StatusText = "Preparing installation...";
+            StatusText = $"Installing to: {installDir}";
 
             var gameRoot = await _installService.InstallFullGameAsync(
                 installDir, fullFileAddr, progress, _cts.Token);
@@ -460,7 +777,7 @@ public class HomeViewModel : ViewModelBase
                 // Load the version from the freshly installed files
                 LoadLocalVersion();
 
-                StatusText = "Installation complete! Checking for updates...";
+                StatusText = $"Installed to: {gameRoot}. Checking for updates...";
                 ProgressPercent = 100;
                 DownloadSpeed = string.Empty;
                 Eta = string.Empty;

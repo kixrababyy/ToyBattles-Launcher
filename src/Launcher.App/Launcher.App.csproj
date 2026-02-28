@@ -9,7 +9,7 @@
     <RootNamespace>Launcher.App</RootNamespace>
     <AssemblyName>Launcher</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- <ApplicationIcon>Assets\icon.ico</ApplicationIcon> -->
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
 
     <!-- Single-file self-contained publish: just send people Launcher.exe -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -18,10 +18,15 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Launcher.Core\Launcher.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

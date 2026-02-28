@@ -5,13 +5,14 @@
         xmlns:views="clr-namespace:Launcher.App.Views"
         xmlns:conv="clr-namespace:Launcher.App.Converters"
         Title="ToyBattles Launcher"
-        Width="1040" Height="650"
-        MinWidth="920" MinHeight="580"
+        Width="1080" Height="690"
+        MinWidth="960" MinHeight="620"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        ResizeMode="CanMinimize">
+        ResizeMode="CanMinimize"
+        UseLayoutRounding="True">
 
     <Window.Resources>
         <conv:NavSelectionConverter x:Key="NavSelect"/>
@@ -28,16 +29,23 @@
         </DataTemplate>
     </Window.Resources>
 
-    <!-- Outer shell with rounded corners and drop shadow -->
-    <Border CornerRadius="16"
+    <Grid>
+    <!-- Shadow layer — Margin gives the shadow room to spread, avoiding the rectangular box-outline artifact -->
+    <Border CornerRadius="16" Margin="20"
+            Background="{StaticResource BgDarkestBrush}">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="0" Color="#000000" Opacity="0.88"/>
+        </Border.Effect>
+    </Border>
+
+    <!-- Content layer, clipped to rounded rectangle -->
+    <Border CornerRadius="16" Margin="20"
             Background="{StaticResource BgDarkestBrush}"
             BorderBrush="#10FFFFFF"
-            BorderThickness="1">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="60" ShadowDepth="0" Color="#000000" Opacity="0.88"/>
-        </Border.Effect>
+            BorderThickness="1"
+            ClipToBounds="True">
 
-        <Grid>
+        <Grid x:Name="InnerGrid">
             <Grid.ColumnDefinitions>
                 <!-- Icon-only sidebar -->
                 <ColumnDefinition Width="72"/>
@@ -60,15 +68,28 @@
                         <RowDefinition Height="Auto"/> <!-- Window controls -->
                     </Grid.RowDefinitions>
 
-                    <!-- Logo / Home button -->
+                    <!-- Logo / Banner button -->
                     <Button Grid.Row="0"
-                            Command="{Binding NavigateHomeCommand}"
+                            Command="{Binding ShowBannerCommand}"
                             Background="Transparent" BorderThickness="0"
-                            Width="72" Height="72" Cursor="Hand">
+                            Width="72" Height="72" Cursor="Hand"
+                            ToolTip="ToyBattles">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="bg" Background="Transparent">
+                                <Border x:Name="bg" Background="Transparent"
+                                        CornerRadius="0,0,0,0">
                                     <Grid>
+                                        <!-- Active indicator bar (left edge, shown in banner mode) -->
+                                        <Border x:Name="activeBar" Width="3" Height="30"
+                                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                CornerRadius="0,3,3,0" Opacity="0">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="{StaticResource AccentBlue}" Offset="0"/>
+                                                    <GradientStop Color="{StaticResource AccentGold}" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                        </Border>
                                         <!-- Logo image (loaded at runtime from Assets/logo.png) -->
                                         <Image x:Name="LogoImage"
                                                Width="46" Height="46"
@@ -88,8 +109,12 @@
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bg" Property="Background" Value="#08FFFFFF"/>
+                                        <Setter TargetName="bg" Property="Background" Value="#0C26C0F0"/>
                                     </Trigger>
+                                    <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Banner}" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#1426C0F0"/>
+                                        <Setter TargetName="activeBar" Property="Opacity" Value="1"/>
+                                    </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
@@ -142,59 +167,6 @@
                                             <Setter Property="Foreground" Value="#28304A"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Home}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
-                        </Button>
-
-                        <!-- REPAIR -->
-                        <Button Command="{Binding NavigateRepairCommand}"
-                                Style="{StaticResource SideNavButton}"
-                                ToolTip="Repair">
-                            <Grid Width="72" Height="60">
-                                <!-- Left accent bar -->
-                                <Border Width="3" Height="30"
-                                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                                        CornerRadius="0,3,3,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
-                                            <Setter Property="Opacity" Value="0"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Repair}" Value="True">
-                                                    <Setter Property="Opacity" Value="1"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                </Border>
-                                <!-- Icon background pill -->
-                                <Border Width="44" Height="44" CornerRadius="12"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Repair}" Value="True">
-                                                    <Setter Property="Background" Value="#1426C0F0"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                </Border>
-                                <!-- Repair icon -->
-                                <TextBlock Text="&#xE90F;"
-                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#28304A"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Repair}" Value="True">
                                                     <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -260,7 +232,7 @@
 
             <!-- ==================== MAIN CONTENT AREA ==================== -->
             <Border Grid.Column="1" CornerRadius="0,16,16,0" ClipToBounds="True">
-                <Grid>
+                <Grid x:Name="ContentGrid">
 
                     <!-- Background: wallpaper slideshow -->
                     <!-- Layer A -->
@@ -495,18 +467,176 @@
                         </Rectangle.Fill>
                     </Rectangle>
 
-                    <!-- Thin top drag region -->
-                    <Border Height="44" VerticalAlignment="Top"
-                            Background="Transparent"
+                    <!-- Full-area drag region (below ContentControl so interactive elements still work) -->
+                    <Border Background="Transparent"
                             MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
                             IsHitTestVisible="True"/>
 
                     <!-- Current page view (transparent overlay) -->
                     <ContentControl Content="{Binding CurrentPage}"/>
 
+                    <!-- ===== BANNER MODE OVERLAY ===== -->
+                    <Border x:Name="BannerOverlay"
+                            MouseLeftButtonDown="BannerOverlay_MouseLeftButtonDown"
+                            Cursor="Hand">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBannerMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                <GradientStop Color="#D0020408" Offset="0"/>
+                                <GradientStop Color="#E0060912" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+
+                        <!-- Staff Team content -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalAlignment="Center">
+                            <StackPanel Margin="60,28,60,20">
+
+                                <!-- Header -->
+                                <TextBlock Text="STAFF TEAM" FontSize="32" FontWeight="ExtraBold"
+                                           FontFamily="Segoe UI" HorizontalAlignment="Center"
+                                           Margin="0,0,0,4">
+                                    <TextBlock.Foreground>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#26C0F0" Offset="0"/>
+                                            <GradientStop Color="#FFB800" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </TextBlock.Foreground>
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="24" ShadowDepth="0"
+                                                          Color="#26C0F0" Opacity="0.4"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+
+                                <TextBlock Text="MicroVolts Recharged"
+                                           FontSize="13" FontFamily="Segoe UI" FontWeight="Light"
+                                           Foreground="#2A3A5A"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,18"/>
+
+                                <!-- Separator -->
+                                <Border Height="1" Margin="100,0,100,18">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="Transparent" Offset="0"/>
+                                            <GradientStop Color="#2026C0F0" Offset="0.5"/>
+                                            <GradientStop Color="Transparent" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <!-- Staff cards: 2-column grid -->
+                                <UniformGrid Columns="2" Rows="2">
+
+                                    <!-- ADMIN -->
+                                    <Border Margin="6" Padding="18,14" CornerRadius="10"
+                                            Background="#0C16a12b" BorderBrush="#2516a12b" BorderThickness="1">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Border Width="3" CornerRadius="2" Margin="0,0,10,0">
+                                                    <Border.Background><SolidColorBrush Color="#16a12b"/></Border.Background>
+                                                </Border>
+                                                <TextBlock Text="ADMIN" FontSize="10" FontWeight="Bold"
+                                                           Foreground="#16a12b" FontFamily="Segoe UI"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Mikael"    FontSize="13" FontFamily="Segoe UI" Foreground="#7AAA88" Margin="13,0,0,3"/>
+                                            <TextBlock Text="Template"  FontSize="13" FontFamily="Segoe UI" Foreground="#7AAA88" Margin="13,0,0,3"/>
+                                            <TextBlock Text="avlad171"  FontSize="13" FontFamily="Segoe UI" Foreground="#7AAA88" Margin="13,0,0,3"/>
+                                            <TextBlock Text="mnml"      FontSize="13" FontFamily="Segoe UI" Foreground="#7AAA88" Margin="13,0,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- GAME MASTER -->
+                                    <Border Margin="6" Padding="18,14" CornerRadius="10"
+                                            Background="#0Cf29b22" BorderBrush="#25f29b22" BorderThickness="1">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Border Width="3" CornerRadius="2" Margin="0,0,10,0">
+                                                    <Border.Background><SolidColorBrush Color="#f29b22"/></Border.Background>
+                                                </Border>
+                                                <TextBlock Text="GAME MASTER" FontSize="10" FontWeight="Bold"
+                                                           Foreground="#f29b22" FontFamily="Segoe UI"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="kierababyy" FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,3"/>
+                                            <TextBlock Text="Scayla"     FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,3"/>
+                                            <TextBlock Text="Mumnum"     FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,3"/>
+                                            <TextBlock Text="kTs"        FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,3"/>
+                                            <TextBlock Text="mew"        FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,3"/>
+                                            <TextBlock Text="zScopion"   FontSize="13" FontFamily="Segoe UI" Foreground="#B8955A" Margin="13,0,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- MODERATOR -->
+                                    <Border Margin="6" Padding="18,14" CornerRadius="10"
+                                            Background="#0Ce91eae" BorderBrush="#25e91eae" BorderThickness="1">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Border Width="3" CornerRadius="2" Margin="0,0,10,0">
+                                                    <Border.Background><SolidColorBrush Color="#e91eae"/></Border.Background>
+                                                </Border>
+                                                <TextBlock Text="MODERATOR" FontSize="10" FontWeight="Bold"
+                                                           Foreground="#e91eae" FontFamily="Segoe UI"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="VACANT" FontSize="13" FontFamily="Segoe UI"
+                                                       Foreground="#4A3040" FontStyle="Italic" Margin="13,0,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- TRIAL MODERATOR -->
+                                    <Border Margin="6" Padding="18,14" CornerRadius="10"
+                                            Background="#0Cdb799a" BorderBrush="#25db799a" BorderThickness="1">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Border Width="3" CornerRadius="2" Margin="0,0,10,0">
+                                                    <Border.Background><SolidColorBrush Color="#db799a"/></Border.Background>
+                                                </Border>
+                                                <TextBlock Text="TRIAL MODERATOR" FontSize="10" FontWeight="Bold"
+                                                           Foreground="#db799a" FontFamily="Segoe UI"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="VACANT" FontSize="13" FontFamily="Segoe UI"
+                                                       Foreground="#4A3040" FontStyle="Italic" Margin="13,0,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                </UniformGrid>
+
+                                <!-- Back button -->
+                                <Button Command="{Binding NavigateHomeCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,20,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72B;"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Back to Home"
+                                                   FontFamily="Segoe UI" FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
                 </Grid>
             </Border>
 
         </Grid>
     </Border>
+    </Grid>
 </Window>

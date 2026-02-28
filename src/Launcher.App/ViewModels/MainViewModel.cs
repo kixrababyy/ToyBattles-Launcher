@@ -22,11 +22,19 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _selectedNav, value);
     }
 
+    private bool _isBannerMode;
+    public bool IsBannerMode
+    {
+        get => _isBannerMode;
+        set => SetProperty(ref _isBannerMode, value);
+    }
+
     public HomeViewModel HomeVM { get; }
     public SettingsViewModel SettingsVM { get; }
     public RepairViewModel RepairVM { get; }
 
     public ICommand NavigateHomeCommand { get; }
+    public ICommand ShowBannerCommand { get; }
     public ICommand NavigateSettingsCommand { get; }
     public ICommand NavigateRepairCommand { get; }
     public ICommand NavigateNewsCommand { get; }
@@ -41,14 +49,15 @@ public class MainViewModel : ViewModelBase
         RepairVM = new RepairViewModel();
         _currentPage = HomeVM;
 
-        NavigateHomeCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Home"; });
-        NavigateSettingsCommand = new RelayCommand(_ => { CurrentPage = SettingsVM; SelectedNav = "Settings"; SettingsVM.Refresh(); });
-        NavigateRepairCommand = new RelayCommand(_ => { CurrentPage = RepairVM; SelectedNav = "Repair"; });
+        NavigateHomeCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Home"; IsBannerMode = false; });
+        ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; });
+        NavigateSettingsCommand = new RelayCommand(_ => { CurrentPage = SettingsVM; SelectedNav = "Settings"; IsBannerMode = false; SettingsVM.Refresh(); });
+        NavigateRepairCommand = new RelayCommand(_ => { CurrentPage = RepairVM; SelectedNav = "Repair"; IsBannerMode = false; });
 
         NavigateNewsCommand = new RelayCommand(_ =>
-            OpenUrl("https://toybattles.net/clubhouse#news"));
+            OpenUrl("https://toybattles.net/"));
         NavigateDiscordCommand = new RelayCommand(_ =>
-            OpenUrl("https://dc.toybattles.net"));
+            OpenUrl("https://discord.gg/toybattles"));
 
         CloseCommand = new RelayCommand(_ =>
             System.Windows.Application.Current.Shutdown());

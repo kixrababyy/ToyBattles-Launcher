@@ -30,6 +30,24 @@
 
     <Grid x:Name="RootGrid" Opacity="0">
 
+        <!-- ===== LAUNCHER UPDATE BANNER (top of view) ===== -->
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                Background="#CC0D2010" BorderBrush="#3A7D44" BorderThickness="0,0,0,1"
+                Padding="16,10"
+                Visibility="{Binding LauncherUpdateText, Converter={StaticResource StringToVis}}">
+            <Grid>
+                <TextBlock Text="{Binding LauncherUpdateText}"
+                           FontSize="12" FontFamily="Segoe UI"
+                           Foreground="#7ED99B"
+                           VerticalAlignment="Center"/>
+                <Button Content="Download"
+                        Command="{Binding OpenLauncherDownloadCommand}"
+                        HorizontalAlignment="Right"
+                        Style="{StaticResource SecondaryButton}"
+                        Padding="12,4" FontSize="11"/>
+            </Grid>
+        </Border>
+
         <!-- ===== BANNER IMAGE (positioned at the dark gradient edge) ===== -->
         <Image x:Name="BannerImage"
                MaxHeight="360" HorizontalAlignment="Left" VerticalAlignment="Bottom"
@@ -67,6 +85,8 @@
             <Grid.RowDefinitions>
                 <!-- Progress bar (conditional) -->
                 <RowDefinition Height="Auto"/>
+                <!-- Inline settings panel (conditional) -->
+                <RowDefinition Height="Auto"/>
                 <!-- Main bottom bar -->
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -78,7 +98,10 @@
                     Padding="20,16" Margin="0,0,0,18"
                     Opacity="0" RenderTransformOrigin="0.5,1">
                 <Border.RenderTransform>
-                    <TranslateTransform Y="0"/>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        <TranslateTransform Y="0"/>
+                    </TransformGroup>
                 </Border.RenderTransform>
                 <Border.Style>
                     <Style TargetType="Border">
@@ -89,6 +112,7 @@
                                 <DataTrigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
+                                            <!-- Fade in -->
                                             <DoubleAnimation
                                                 Storyboard.TargetProperty="Opacity"
                                                 From="0" To="1" Duration="0:0:0.5">
@@ -96,11 +120,27 @@
                                                     <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
+                                            <!-- Slide up -->
                                             <DoubleAnimation
-                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                                From="20" To="0" Duration="0:0:0.5">
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                From="24" To="0" Duration="0:0:0.5">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <!-- Scale bounce -->
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
+                                                From="0.97" To="1" Duration="0:0:0.45">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
+                                                From="0.97" To="1" Duration="0:0:0.45">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
                                         </Storyboard>
@@ -109,9 +149,33 @@
                                 <DataTrigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
+                                            <!-- Fade out -->
                                             <DoubleAnimation
                                                 Storyboard.TargetProperty="Opacity"
                                                 To="0" Duration="0:0:0.35">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <!-- Slide down -->
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                To="16" Duration="0:0:0.35">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <!-- Scale down -->
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
+                                                To="0.98" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
+                                                To="0.98" Duration="0:0:0.3">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseIn"/>
                                                 </DoubleAnimation.EasingFunction>
@@ -188,8 +252,195 @@
                 </StackPanel>
             </Border>
 
+            <!-- ===== INLINE SETTINGS PANEL ===== -->
+            <Border x:Name="SettingsPanel" Grid.Row="1"
+                    Margin="0,0,0,14"
+                    Opacity="0" RenderTransformOrigin="0.5,1">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        <TranslateTransform Y="0"/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             From="0" To="1" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                             From="18" To="0" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                             To="12" Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <!-- Inner card — DataContext switched to SettingsVM -->
+                <Border Background="#C2080D14" CornerRadius="14"
+                        BorderBrush="#2026C0F0" BorderThickness="1"
+                        Padding="20,16"
+                        DataContext="{Binding DataContext.SettingsVM, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                        <StackPanel>
+
+                            <!-- ===== VERIFY & REPAIR SECTION ===== -->
+                            <StackPanel DataContext="{Binding DataContext.RepairVM, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Margin="0,0,0,16">
+
+                                <TextBlock Text="Verify &amp; Repair" FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="Check your game files for corruption or missing data."
+                                           FontSize="12" FontFamily="Segoe UI"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,12"/>
+
+                                <!-- Status text -->
+                                <TextBlock Text="{Binding StatusText}"
+                                           FontSize="13" FontFamily="Segoe UI"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,12"/>
+
+                                <!-- Progress bar + current file (when repairing) -->
+                                <StackPanel Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"
+                                            Margin="0,0,0,12">
+                                    <ProgressBar Value="{Binding ProgressPercent}"
+                                                 Minimum="0" Maximum="100"
+                                                 Style="{StaticResource AccentProgressBar}"/>
+                                    <TextBlock Text="{Binding CurrentFileText}"
+                                               FontSize="11" FontFamily="Segoe UI"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,5,0,0"
+                                               Visibility="{Binding CurrentFileText, Converter={StaticResource StringToVis}}"/>
+                                </StackPanel>
+
+                                <!-- Results summary -->
+                                <Border Visibility="{Binding ResultSummary, Converter={StaticResource StringToVis}}"
+                                        Background="#0CFFFFFF"
+                                        CornerRadius="10" Padding="14,12"
+                                        Margin="0,0,0,12"
+                                        BorderBrush="#0EFFFFFF" BorderThickness="1">
+                                    <TextBlock Text="{Binding ResultSummary}"
+                                               FontSize="13" FontFamily="Segoe UI"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               TextWrapping="Wrap" LineHeight="20"/>
+                                </Border>
+
+                                <!-- Action buttons -->
+                                <WrapPanel>
+                                    <Button Content="Verify &amp; Repair Files"
+                                            Command="{Binding RepairCommand}"
+                                            IsEnabled="{Binding IsRepairEnabled}"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Margin="0,0,8,6"/>
+                                    <Button Content="Full Reinstall"
+                                            Command="{Binding FullReinstallCommand}"
+                                            IsEnabled="{Binding IsReinstallEnabled}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,8,6"/>
+                                    <Button Content="Clear Cache"
+                                            Command="{Binding ClearCacheCommand}"
+                                            IsEnabled="{Binding IsRepairEnabled}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,8,6"/>
+                                    <Button Content="Cancel"
+                                            Command="{Binding CancelCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,0,6"
+                                            Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"/>
+                                </WrapPanel>
+
+                                <!-- Cache size feedback -->
+                                <TextBlock Text="{Binding CacheSizeText}"
+                                           FontSize="11" FontFamily="Segoe UI"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Margin="0,6,0,0"
+                                           Visibility="{Binding CacheSizeText, Converter={StaticResource StringToVis}}"/>
+
+                            </StackPanel>
+
+                            <!-- ===== SETTINGS SECTION ===== -->
+                            <Border Height="1" Background="#14FFFFFF" Margin="0,0,0,16"/>
+
+                            <!-- GAME DIRECTORY -->
+                            <TextBlock Text="GAME DIRECTORY" FontSize="10" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding GameRootPath, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource DarkTextBox}" IsReadOnly="True"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                                    <Button Content="Browse"
+                                            Command="{Binding BrowseGameRootCommand}"
+                                            Style="{StaticResource SecondaryButton}"/>
+                                    <Button Content="Open Folder"
+                                            Command="{Binding OpenGameFolderCommand}"
+                                            Style="{StaticResource SecondaryButton}" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- BEHAVIOUR -->
+                            <CheckBox IsChecked="{Binding KeepLauncherOpen}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      FontFamily="Segoe UI" FontSize="13"
+                                      Margin="0,0,0,16"
+                                      Content="Keep launcher open after launching game"/>
+
+                            <!-- ACTIONS -->
+                            <WrapPanel>
+                                <Button Content="Open Logs" Command="{Binding OpenLogsFolderCommand}"
+                                        Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                                <Button Content="Create Shortcut" Command="{Binding CreateShortcutCommand}"
+                                        Style="{StaticResource SecondaryButton}"/>
+                            </WrapPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Border>
+
             <!-- Main bottom bar: title left, PLAY right -->
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -209,14 +460,14 @@
                             <Run Text="TOY" Foreground="{StaticResource AccentBlueBrush}"/>
                             <Run Text="BATTLES" Foreground="{StaticResource AccentGoldBrush}"/>
                         </TextBlock>
-                        <TextBlock Text="MicroVolts Recharged"
+                        <TextBlock Text="ToyBattles"
                                    FontSize="12" FontFamily="Segoe UI"
                                    Foreground="#3A4A6A"
                                    Margin="3,3,0,10"/>
                     </StackPanel>
 
-                    <!-- Version badges -->
-                    <StackPanel Orientation="Horizontal">
+                    <!-- Version badges + server selector -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Background="#12FFAA00" CornerRadius="5" Padding="9,4"
                                 Margin="0,0,6,0"
                                 Visibility="{Binding InstalledVersionText, Converter={StaticResource StringToVis}}">
@@ -225,11 +476,73 @@
                                        Foreground="{StaticResource AccentGoldBrush}"/>
                         </Border>
                         <Border Background="#0AFFFFFF" CornerRadius="5" Padding="9,4"
+                                Margin="0,0,6,0"
                                 Visibility="{Binding RemoteVersionText, Converter={StaticResource StringToVis}}">
                             <TextBlock Text="{Binding RemoteVersionText}"
                                        FontSize="11"
                                        Foreground="{StaticResource TextSecondaryBrush}"/>
                         </Border>
+                        <ComboBox Style="{StaticResource DarkComboBox}"
+                                  ItemsSource="{Binding ServerOptions}"
+                                  SelectedItem="{Binding SelectedServer, Mode=TwoWay}"
+                                  VerticalAlignment="Center">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="lockIcon"
+                                                   Text="&#xE72E;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="9"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,5,0"
+                                                   Visibility="Collapsed"/>
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding}" Value="Test Server">
+                                            <Setter TargetName="lockIcon" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="FontFamily" Value="Segoe UI"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Padding" Value="10,7"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border x:Name="bg" Background="{TemplateBinding Background}"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsHighlighted" Value="True">
+                                                        <Setter TargetName="bg" Property="Background" Value="#1826C0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding}" Value="Test Server">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                            <Setter Property="ToolTip" Value="Coming soon"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                        </ComboBox>
                     </StackPanel>
 
                     <!-- Status text (when progress bar is hidden) -->
@@ -251,30 +564,111 @@
 
                 </StackPanel>
 
-                <!-- Right: PLAY button -->
-                <Button Grid.Column="1"
-                        VerticalAlignment="Bottom"
-                        Content="{Binding ActionButtonText}"
-                        Command="{Binding ActionCommand}"
-                        IsEnabled="{Binding IsActionEnabled}"
-                        Style="{StaticResource PlayButton}"
-                        Margin="20,0,0,0"/>
+                <!-- Right: action buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            VerticalAlignment="Bottom" Margin="20,0,0,0">
+
+                    <!-- Download size estimate badge -->
+                    <Border Background="#12FFAA00" CornerRadius="5" Padding="9,4"
+                            VerticalAlignment="Center" Margin="0,0,10,0"
+                            Visibility="{Binding DownloadSizeText, Converter={StaticResource StringToVis}}">
+                        <TextBlock Text="{Binding DownloadSizeText}"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentGoldBrush}"/>
+                    </Border>
+
+                    <!-- Cancel button (visible during downloads) -->
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Padding="20,0" Height="54" FontSize="13"
+                            Margin="0,0,10,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCancelVisible}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- Check for Updates button (visible when ready/error) -->
+                    <Button Content="Check for Updates"
+                            Command="{Binding CheckUpdatesCommand}"
+                            Padding="20,0" Height="54" FontSize="13"
+                            Margin="0,0,10,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCheckUpdatesVisible}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- Settings toggle button -->
+                    <Button Command="{Binding ToggleSettingsCommand}"
+                            Width="54" Height="54"
+                            Margin="0,0,10,0"
+                            Style="{StaticResource SecondaryButton}"
+                            ToolTip="Settings &amp; Repair">
+                        <TextBlock Text="&#xEA37;"
+                                   FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+
+                    <!-- PLAY / action button -->
+                    <Button VerticalAlignment="Bottom"
+                            Content="{Binding ActionButtonText}"
+                            Command="{Binding ActionCommand}"
+                            IsEnabled="{Binding IsActionEnabled}"
+                            Style="{StaticResource PlayButton}"/>
+                </StackPanel>
 
             </Grid>
         </Grid>
 
+        <!-- ===== SERVER STATUS (bottom-left corner) ===== -->
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                    Orientation="Horizontal" Margin="36,0,0,10">
+            <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,6,0"
+                     Fill="{Binding ServerStatusBrush}"/>
+            <TextBlock Text="{Binding ServerStatusText}"
+                       FontSize="11" FontFamily="Segoe UI"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
         <!-- ===== LINKS (top-right quick links) ===== -->
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
                     Orientation="Horizontal" Margin="0,16,36,0">
-            <Button Content="Website"
-                    Command="{Binding DataContext.NavigateNewsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+            <Button Command="{Binding DataContext.NavigateNewsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     Style="{StaticResource SecondaryButton}"
-                    Padding="14,8" FontSize="12"
-                    Margin="0,0,8,0"/>
-            <Button Content="Discord"
-                    Command="{Binding DataContext.NavigateDiscordCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Padding="14,8" Margin="0,0,8,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE128;"
+                               FontFamily="Segoe MDL2 Assets" FontSize="11"
+                               VerticalAlignment="Center" Margin="0,1,6,0"/>
+                    <TextBlock Text="Website" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding DataContext.NavigateDiscordCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     Style="{StaticResource SecondaryButton}"
-                    Padding="14,8" FontSize="12"/>
+                    Padding="14,8">
+                <StackPanel Orientation="Horizontal">
+                    <Viewbox Width="13" Height="13" VerticalAlignment="Center" Margin="0,0,6,0">
+                        <Path Width="24" Height="24" Stretch="Uniform"
+                              Fill="{StaticResource TextPrimaryBrush}"
+                              Data="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.1.124 18.14.148 18.16a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </Viewbox>
+                    <TextBlock Text="Discord" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
 
     </Grid>

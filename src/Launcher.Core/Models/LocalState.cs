@@ -13,6 +13,11 @@ public class LocalState
     public DateTime? LastCheckUtc { get; set; }
     public string? LaunchArguments { get; set; }
     public string? CustomUpdateUrl { get; set; }
+    public bool KeepLauncherOpen { get; set; } = false;
+    public bool CheckUpdatesOnStartup { get; set; } = true;
+    public int MaxDownloadSpeedMBps { get; set; } = 0; // 0 = unlimited
+    public string? ServerIp { get; set; }
+    public string? ServerProfile { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

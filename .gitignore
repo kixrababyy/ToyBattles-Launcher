@@ -26,6 +26,12 @@ publish/
 Thumbs.db
 .DS_Store
 
+## Claude local settings
+.claude/
+
+## MSBuild temp WPF projects
+**/*_wpftmp.csproj
+
 ## Game data (not part of the launcher source)
 data/
 Bin/

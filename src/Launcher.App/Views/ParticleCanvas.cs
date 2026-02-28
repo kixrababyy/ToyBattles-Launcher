@@ -27,7 +27,7 @@ public class ParticleCanvas : Canvas
     private const double  ParticleSizeMax = 6.0;
     private const double  BaseOpacity     = 0.55;
     private const double  GlowRadius      = 8.0;    // px — equivalent to shadowBlur
-    private const double  MovementSpeed   = 0.45;
+    private const double  MovementSpeed   = 2.5;
     private const double  MouseInfluence  = 140.0;   // px radius
     private const double  GravityStrength = 40.0;
     private static readonly string MouseGravity = "attract"; // "attract" | "repel" | "none"
@@ -176,8 +176,8 @@ public class ParticleCanvas : Canvas
             p.Y += p.Vy;
 
             // Subtle random perturbation
-            p.Vx += (_rng.NextDouble() - 0.5) * 0.002;
-            p.Vy += (_rng.NextDouble() - 0.5) * 0.002;
+            p.Vx += (_rng.NextDouble() - 0.5) * 0.01;
+            p.Vy += (_rng.NextDouble() - 0.5) * 0.01;
 
             // Damping
             p.Vx *= 0.999;
