@@ -19,6 +19,15 @@ public class LocalState
     public string? ServerIp { get; set; }
     public string? ServerProfile { get; set; }
 
+    /// <summary>Cumulative playtime across all sessions, in seconds.</summary>
+    public long TotalPlaytimeSeconds { get; set; } = 0;
+
+    /// <summary>
+    /// Set when the game is launched. Cleared when the session is recorded.
+    /// If still set on next launch (e.g. launcher closed with game), elapsed time is recovered.
+    /// </summary>
+    public DateTime? PendingSessionStartUtc { get; set; } = null;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true

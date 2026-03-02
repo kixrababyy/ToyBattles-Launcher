@@ -117,6 +117,20 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _serverStatusText, value);
     }
 
+    private string _playtimeText = string.Empty;
+    public string PlaytimeText
+    {
+        get => _playtimeText;
+        set => SetProperty(ref _playtimeText, value);
+    }
+
+    private bool _isVersionUpToDate;
+    public bool IsVersionUpToDate
+    {
+        get => _isVersionUpToDate;
+        set => SetProperty(ref _isVersionUpToDate, value);
+    }
+
     private SolidColorBrush _serverStatusBrush = new(Color.FromRgb(0xFF, 0xB8, 0x00));
     public SolidColorBrush ServerStatusBrush
     {
@@ -228,6 +242,10 @@ public class HomeViewModel : ViewModelBase
     {
         _localState = LocalState.Load();
 
+        // Recover playtime from any session where the launcher was closed with the game running
+        RecoverPendingSession();
+        UpdatePlaytimeText();
+
         // Load updateinfo.ini — try local file first, then bootstrap from CDN
         var cwd = AppDomain.CurrentDomain.BaseDirectory;
         var localUpdateInfo = Path.Combine(cwd, "updateinfo.ini");
@@ -288,6 +306,35 @@ public class HomeViewModel : ViewModelBase
     /// <summary>
     /// Checks that critical game files exist beyond just the exe.
     /// </summary>
+    private static string FormatPlaytime(long totalSeconds)
+    {
+        if (totalSeconds <= 0) return "0m played";
+        var hours = totalSeconds / 3600;
+        var minutes = (totalSeconds % 3600) / 60;
+        if (hours == 0 && minutes == 0) return "< 1m played";
+        if (hours == 0) return $"{minutes}m played";
+        if (minutes == 0) return $"{hours}h played";
+        return $"{hours}h {minutes}m played";
+    }
+
+    private void UpdatePlaytimeText() =>
+        PlaytimeText = FormatPlaytime(_localState.TotalPlaytimeSeconds);
+
+    private void RecoverPendingSession()
+    {
+        if (_localState.PendingSessionStartUtc is not { } start) return;
+
+        // Cap at 12 hours to avoid inflating playtime if the PC was left on overnight
+        const long maxSessionSeconds = 12 * 3600;
+        var elapsed = (long)(DateTime.UtcNow - start).TotalSeconds;
+        elapsed = Math.Clamp(elapsed, 0, maxSessionSeconds);
+
+        _localState.TotalPlaytimeSeconds += elapsed;
+        _localState.PendingSessionStartUtc = null;
+        _localState.Save();
+        LogService.Log($"Recovered pending session: +{elapsed}s playtime");
+    }
+
     private static bool ValidateCriticalFiles(string gameRootPath)
     {
         if (!LaunchService.ValidateGameRoot(gameRootPath))
@@ -364,6 +411,7 @@ public class HomeViewModel : ViewModelBase
 
             if (PatchService.NeedsUpdate(installedVersion, _remotePatch.LatestVersion))
             {
+                IsVersionUpToDate = false;
                 State = LauncherState.UpdateAvailable;
                 StatusText = $"Update available: {_remotePatch.LatestVersion}";
 
@@ -389,6 +437,7 @@ public class HomeViewModel : ViewModelBase
             }
             else
             {
+                IsVersionUpToDate = true;
                 LogService.Log($"Version {installedVersion} is up to date.");
                 State = LauncherState.Ready;
                 StatusText = "Game is up to date!";
@@ -480,20 +529,29 @@ public class HomeViewModel : ViewModelBase
                 _localState.Save();
                 InstalledVersionText = $"Installed: {_remotePatch.LatestVersion}";
 
-                State = LauncherState.Ready;
-                StatusText = "Update complete! Ready to play.";
                 ProgressPercent = 100;
                 DownloadSpeed = string.Empty;
                 Eta = string.Empty;
                 DownloadSizeText = string.Empty;
 
-                PatchNotes = $"🎮 ToyBattles\n\n" +
-                             $"Version: {_remotePatch.LatestVersion}\n\n" +
-                             $"Update applied successfully! Click PLAY to launch.";
-
                 ShowBalloonRequested?.Invoke(
                     "ToyBattles Updated",
                     $"Updated to {_remotePatch.LatestVersion} — ready to play!");
+
+                // Re-check in case there is a further patch on top of the one we just applied
+                StatusText = "Update applied. Verifying latest version...";
+                await CheckForUpdatesAsync();
+
+                // If still up to date, set friendly message
+                if (State == LauncherState.Ready)
+                {
+                    StatusText = "Update complete! Ready to play.";
+                    PatchNotes = $"🎮 ToyBattles\n\n" +
+                                 $"Version: {_remotePatch.LatestVersion}\n\n" +
+                                 $"Update applied successfully! Click PLAY to launch.";
+                }
+                // If another update was found, DownloadAndApplyUpdateAsync will be triggered
+                // by the caller (InstallFullGameAsync) or the user can click UPDATE
             }
             else
             {
@@ -609,12 +667,17 @@ public class HomeViewModel : ViewModelBase
         State = LauncherState.Launching;
         StatusText = "Launching ToyBattles...";
 
+        // Record session start before launching — persisted so it survives launcher close
+        _localState.PendingSessionStartUtc = DateTime.UtcNow;
+        _localState.Save();
+
         var proc = LaunchService.Launch(_localState.GameRootPath!, _localState.LaunchArguments);
         if (proc != null)
         {
             StatusText = "Game launched!";
             if (!_localState.KeepLauncherOpen)
             {
+                // Launcher closes immediately — session start is persisted; time recovered on next open
                 proc.Dispose();
                 System.Windows.Application.Current.Dispatcher.BeginInvoke(
                     System.Windows.Threading.DispatcherPriority.Background,
@@ -634,6 +697,16 @@ public class HomeViewModel : ViewModelBase
 
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
+                        // Record session end accurately
+                        if (_localState.PendingSessionStartUtc is { } start)
+                        {
+                            var elapsed = (long)(DateTime.UtcNow - start).TotalSeconds;
+                            _localState.TotalPlaytimeSeconds += Math.Max(0, elapsed);
+                            _localState.PendingSessionStartUtc = null;
+                            _localState.Save();
+                            UpdatePlaytimeText();
+                        }
+
                         State = LauncherState.Ready;
                         StatusText = "Game session ended. Ready to play again.";
                         RestoreWindowRequested?.Invoke();
@@ -643,6 +716,9 @@ public class HomeViewModel : ViewModelBase
         }
         else
         {
+            // Launch failed — clear the pending session we just saved
+            _localState.PendingSessionStartUtc = null;
+            _localState.Save();
             State = LauncherState.Error;
             StatusText = "Failed to launch game. Check if MicroVolts.exe exists.";
         }
@@ -751,8 +827,12 @@ public class HomeViewModel : ViewModelBase
                 DownloadSpeed = string.Empty;
                 Eta = string.Empty;
 
-                // Seamlessly transition to update check
+                // Check for updates — the Full.zip may be older than the latest patch
                 await CheckForUpdatesAsync();
+
+                // If a patch is available, apply it automatically — no need for user to click again
+                if (State == LauncherState.UpdateAvailable)
+                    await DownloadAndApplyUpdateAsync();
             }
             else
             {

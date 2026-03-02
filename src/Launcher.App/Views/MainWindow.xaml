@@ -12,7 +12,8 @@
         AllowsTransparency="True"
         Background="Transparent"
         ResizeMode="CanMinimize"
-        UseLayoutRounding="True">
+        UseLayoutRounding="True"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
     <Window.Resources>
         <conv:NavSelectionConverter x:Key="NavSelect"/>

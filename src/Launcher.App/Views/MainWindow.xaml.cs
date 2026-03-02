@@ -83,10 +83,36 @@ public partial class MainWindow : Window
         InnerGrid.Clip = geo;
     }
 
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Allow dragging from anywhere that isn't an interactive control
+        if (e.ButtonState == MouseButtonState.Pressed && !IsInteractiveElement(e.OriginalSource))
+            DragMove();
+    }
+
+    private static bool IsInteractiveElement(object source)
+    {
+        var el = source as DependencyObject;
+        while (el != null)
+        {
+            if (el is System.Windows.Controls.Button
+                or System.Windows.Controls.CheckBox
+                or System.Windows.Controls.ComboBox
+                or System.Windows.Controls.ComboBoxItem
+                or System.Windows.Controls.TextBox
+                or System.Windows.Controls.Primitives.ScrollBar
+                or System.Windows.Controls.Slider
+                or System.Windows.Controls.MenuItem
+                or System.Windows.Controls.ScrollViewer)
+                return true;
+            el = System.Windows.Media.VisualTreeHelper.GetParent(el);
+        }
+        return false;
+    }
+
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 1)
-            DragMove();
+        // Kept for explicit title bar double-click minimise / other uses; drag handled at Window level
     }
 
     private void BannerOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
