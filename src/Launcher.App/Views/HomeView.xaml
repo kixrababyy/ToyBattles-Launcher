@@ -30,24 +30,6 @@
 
     <Grid x:Name="RootGrid" Opacity="0">
 
-        <!-- ===== LAUNCHER UPDATE BANNER (top of view) ===== -->
-        <Border HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                Background="#CC0D2010" BorderBrush="#3A7D44" BorderThickness="0,0,0,1"
-                Padding="16,10"
-                Visibility="{Binding LauncherUpdateText, Converter={StaticResource StringToVis}}">
-            <Grid>
-                <TextBlock Text="{Binding LauncherUpdateText}"
-                           FontSize="12" FontFamily="Segoe UI"
-                           Foreground="#7ED99B"
-                           VerticalAlignment="Center"/>
-                <Button Content="Download"
-                        Command="{Binding OpenLauncherDownloadCommand}"
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource SecondaryButton}"
-                        Padding="12,4" FontSize="11"/>
-            </Grid>
-        </Border>
-
         <!-- ===== BANNER IMAGE (positioned at the dark gradient edge) ===== -->
         <Image x:Name="BannerImage"
                MaxHeight="360" HorizontalAlignment="Left" VerticalAlignment="Bottom"

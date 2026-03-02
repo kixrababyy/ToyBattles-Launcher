@@ -33,7 +33,48 @@ public class ParticleCanvas : Canvas
     private static readonly string MouseGravity = "attract"; // "attract" | "repel" | "none"
     private const double  GlowEaseSpeed   = 0.12;
 
+    // ── Heart geometry (Valentine only) — unit heart centered at (0,0), frozen for reuse ──
+#if VALENTINE_THEME
+    private static readonly Geometry HeartGeometry = CreateHeartGeometry();
+
+    private static Geometry CreateHeartGeometry()
+    {
+        // Heart path, centered at (0,0), fitting roughly in [-0.5,0.5] x [-0.7,0.7].
+        // Scale by (p.Size * 2.8) when drawing to match the visual weight of the circle particles.
+        var geo = new StreamGeometry();
+        using (var ctx = geo.Open())
+        {
+            ctx.BeginFigure(new Point(0.00, -0.25), isFilled: true, isClosed: true);
+            // right upper lobe
+            ctx.BezierTo(new Point( 0.00, -0.70), new Point( 0.50, -0.70), new Point( 0.50, -0.28), true, true);
+            // right lower curve down to bottom point
+            ctx.BezierTo(new Point( 0.50,  0.05), new Point( 0.13,  0.42), new Point( 0.00,  0.70), true, true);
+            // left lower curve
+            ctx.BezierTo(new Point(-0.13,  0.42), new Point(-0.50,  0.05), new Point(-0.50, -0.28), true, true);
+            // left upper lobe back to notch
+            ctx.BezierTo(new Point(-0.50, -0.70), new Point( 0.00, -0.70), new Point( 0.00, -0.25), true, true);
+        }
+        geo.Freeze();
+        return geo;
+    }
+#endif
+
     // ── Brand colors ──────────────────────────────────────────────
+#if VALENTINE_THEME
+    private static readonly Color[] ParticleColors =
+    [
+        // Rose pinks
+        Color.FromRgb(255,  77, 125),  // #FF4D7D  rose pink
+        Color.FromRgb(255, 133, 171),  // #FF85AB  soft pink
+        Color.FromRgb(232,  50,  95),  // #E8325F  deep rose
+        // Valentine reds
+        Color.FromRgb(255,  23,  68),  // #FF1744  valentine red
+        Color.FromRgb(229,   0,  60),  // #E5003C  deep red
+        // Soft whites / blush
+        Color.FromRgb(255, 200, 213),  // #FFC8D5  blush
+        Color.FromRgb(255, 160, 185),  // #FFA0B9  warm pink
+    ];
+#else
     private static readonly Color[] ParticleColors =
     [
         // Blues
@@ -46,6 +87,7 @@ public class ParticleCanvas : Canvas
         Color.FromRgb(255, 208, 64),   // #FFD040  bright gold
         Color.FromRgb(230, 160, 0),    // #E6A000  amber
     ];
+#endif
 
     private readonly List<Particle> _particles = new();
     private readonly Random _rng = new();
@@ -230,14 +272,30 @@ public class ParticleCanvas : Canvas
             var coreBrush = new SolidColorBrush(
                 Color.FromArgb(alpha, p.Color.R, p.Color.G, p.Color.B));
             coreBrush.Freeze();
-            dc.DrawEllipse(coreBrush, null, center, p.Size, p.Size);
 
-            // ── Bright center highlight ──────────────────────────
             var highlightAlpha = (byte)Math.Clamp(alpha * 0.7, 0, 255);
-            var hlBrush = new SolidColorBrush(
-                Color.FromArgb(highlightAlpha, 255, 255, 255));
+            var hlBrush = new SolidColorBrush(Color.FromArgb(highlightAlpha, 255, 255, 255));
             hlBrush.Freeze();
+
+#if VALENTINE_THEME
+            // Draw heart shape — scale the unit heart to particle size and translate to position
+            // scaleX > scaleY makes the heart wider than tall
+            var scaleX = p.Size * 2.4;
+            var scaleY = p.Size * 1.8;
+            dc.PushTransform(new MatrixTransform(scaleX, 0, 0, scaleY, p.X, p.Y));
+            dc.DrawGeometry(coreBrush, null, HeartGeometry);
+            dc.Pop();
+            // Small white inner heart as highlight
+            var hlScaleX = scaleX * 0.38;
+            var hlScaleY = scaleY * 0.38;
+            dc.PushTransform(new MatrixTransform(hlScaleX, 0, 0, hlScaleY, p.X - hlScaleX * 0.1, p.Y - hlScaleY * 0.15));
+            dc.DrawGeometry(hlBrush, null, HeartGeometry);
+            dc.Pop();
+#else
+            dc.DrawEllipse(coreBrush, null, center, p.Size, p.Size);
+            // ── Bright center highlight ──────────────────────────
             dc.DrawEllipse(hlBrush, null, center, p.Size * 0.35, p.Size * 0.35);
+#endif
         }
     }
 

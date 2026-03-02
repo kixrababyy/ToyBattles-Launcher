@@ -241,6 +241,9 @@
                     <!-- Layer B (crossfades over A) -->
                     <Image x:Name="WallpaperB" Stretch="UniformToFill" Opacity="0"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <!-- Theme tint overlay (transparent normally, coloured for seasonal builds) -->
+                    <Rectangle IsHitTestVisible="False"
+                               Fill="{StaticResource WallpaperTintBrush}"/>
                     <!-- Fallback / tint overlay for when no wallpapers are loaded -->
                     <Rectangle IsHitTestVisible="False">
                         <Rectangle.Fill>

@@ -1,0 +1,74 @@
+<Window x:Class="Launcher.App.Views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ToyBattles Launcher"
+        Width="480" Height="180"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False">
+
+    <Border Background="#0A1018"
+            BorderBrush="#1A2A40"
+            BorderThickness="1"
+            CornerRadius="12">
+
+        <Grid Margin="28,20,28,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="6"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Logo / title -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center"
+                        Margin="0,0,0,12">
+                <Image x:Name="LogoImage"
+                       Height="28"
+                       Margin="0,0,10,0"
+                       Visibility="Collapsed"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock x:Name="LogoText"
+                           Text="TOYBATTLES LAUNCHER"
+                           FontSize="15"
+                           FontWeight="Bold"
+                           Foreground="#26C0F0"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe UI"/>
+            </StackPanel>
+
+            <!-- Status text -->
+            <TextBlock x:Name="StatusText"
+                       Grid.Row="2"
+                       Text="Checking for updates..."
+                       Foreground="#8AA8C8"
+                       FontSize="12"
+                       FontFamily="Segoe UI"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,6"/>
+
+            <!-- Progress bar (hidden until downloading) -->
+            <Grid Grid.Row="4">
+                <ProgressBar x:Name="ProgressBar"
+                             Height="4"
+                             Minimum="0" Maximum="100" Value="0"
+                             Visibility="Collapsed"
+                             Background="#1A2A40"
+                             Foreground="#26C0F0"
+                             BorderThickness="0"/>
+                <!-- Indeterminate strip shown while checking (no known %) -->
+                <ProgressBar x:Name="IndeterminateBar"
+                             Height="4"
+                             IsIndeterminate="True"
+                             Background="#1A2A40"
+                             Foreground="#26C0F0"
+                             BorderThickness="0"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

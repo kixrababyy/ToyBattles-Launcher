@@ -1,0 +1,58 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ==================== VALENTINE OVERRIDES ==================== -->
+    <!-- Loaded on top of Dark.xaml — only values defined here are replaced -->
+
+    <!-- Primary accent: rose pink -->
+    <Color x:Key="AccentBlue">#FF4D7D</Color>
+    <Color x:Key="AccentBlueDark">#E8325F</Color>
+    <Color x:Key="AccentBlueLight">#FF85AB</Color>
+
+    <!-- Secondary accent: valentine red -->
+    <Color x:Key="AccentGold">#FF1744</Color>
+    <Color x:Key="AccentAmber">#E5003C</Color>
+    <Color x:Key="AccentGoldLight">#FF4D7D</Color>
+
+    <!-- Glow -->
+    <Color x:Key="GlowBlue">#FF4D7D</Color>
+    <Color x:Key="GlowGold">#FF1744</Color>
+    <Color x:Key="GlowDeepBlue">#CC0033</Color>
+
+    <!-- Text gold → use rose -->
+    <Color x:Key="TextGold">#FF4D7D</Color>
+
+    <!-- Wallpaper tint: semi-transparent rose pink over the existing wallpapers -->
+    <SolidColorBrush x:Key="WallpaperTintBrush" Color="#40FF4D7D"/>
+
+    <!-- ==================== BRUSHES ==================== -->
+    <SolidColorBrush x:Key="AccentBlueBrush"      Color="{StaticResource AccentBlue}"/>
+    <SolidColorBrush x:Key="AccentBlueDarkBrush"  Color="{StaticResource AccentBlueDark}"/>
+    <SolidColorBrush x:Key="AccentBlueLightBrush" Color="{StaticResource AccentBlueLight}"/>
+    <SolidColorBrush x:Key="AccentGoldBrush"      Color="{StaticResource AccentGold}"/>
+    <SolidColorBrush x:Key="AccentAmberBrush"     Color="{StaticResource AccentAmber}"/>
+    <SolidColorBrush x:Key="AccentGoldLightBrush" Color="{StaticResource AccentGoldLight}"/>
+    <SolidColorBrush x:Key="TextGoldBrush"        Color="{StaticResource TextGold}"/>
+
+    <!-- Play / Primary button: rose gradient instead of sky-blue -->
+    <LinearGradientBrush x:Key="BlueGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#E8325F" Offset="0"/>
+        <GradientStop Color="#FF4D7D" Offset="0.5"/>
+        <GradientStop Color="#E8325F" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Secondary gradient: deep red -->
+    <LinearGradientBrush x:Key="GoldGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#E5003C" Offset="0"/>
+        <GradientStop Color="#FF1744" Offset="0.5"/>
+        <GradientStop Color="#E5003C" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Hover / focus accent overlays — rose pink tinted -->
+    <SolidColorBrush x:Key="AccentOverlay0C" Color="#0CFF4D7D"/>
+    <SolidColorBrush x:Key="AccentOverlay18" Color="#18FF4D7D"/>
+    <SolidColorBrush x:Key="AccentOverlay1A" Color="#1AFF4D7D"/>
+    <SolidColorBrush x:Key="AccentOverlay20" Color="#20FF4D7D"/>
+    <SolidColorBrush x:Key="AccentOverlay30" Color="#30FF4D7D"/>
+
+</ResourceDictionary>

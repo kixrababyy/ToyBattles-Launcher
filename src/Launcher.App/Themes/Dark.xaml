@@ -57,6 +57,16 @@
     <SolidColorBrush x:Key="AccentRedBrush"     Color="{StaticResource AccentRed}"/>
     <SolidColorBrush x:Key="SuccessGreenBrush"  Color="{StaticResource SuccessGreen}"/>
 
+    <!-- Wallpaper tint overlay — transparent by default, overridden by themed builds -->
+    <SolidColorBrush x:Key="WallpaperTintBrush" Color="#00000000"/>
+
+    <!-- Accent overlay brushes used for hover/focus states — override in seasonal themes -->
+    <SolidColorBrush x:Key="AccentOverlay0C" Color="#0C26C0F0"/>
+    <SolidColorBrush x:Key="AccentOverlay18" Color="#1826C0F0"/>
+    <SolidColorBrush x:Key="AccentOverlay1A" Color="#1A26C0F0"/>
+    <SolidColorBrush x:Key="AccentOverlay20" Color="#2026C0F0"/>
+    <SolidColorBrush x:Key="AccentOverlay30" Color="#3026C0F0"/>
+
     <!-- PLAY button gradient: deep blue → brand sky-blue → deep blue -->
     <LinearGradientBrush x:Key="BlueGradientBrush" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="#18A8D8" Offset="0"/>
@@ -109,17 +119,15 @@
                         <Border x:Name="glow"
                                 CornerRadius="27"
                                 Margin="-12"
-                                Opacity="0.25">
-                            <Border.Background>
-                                <SolidColorBrush Color="{StaticResource AccentBlue}"/>
-                            </Border.Background>
+                                Opacity="0.25"
+                                Background="{DynamicResource AccentBlueBrush}">
                             <Border.Effect>
                                 <BlurEffect Radius="28"/>
                             </Border.Effect>
                         </Border>
                         <!-- Main pill body -->
                         <Border x:Name="body"
-                                Background="{StaticResource BlueGradientBrush}"
+                                Background="{DynamicResource BlueGradientBrush}"
                                 CornerRadius="27"
                                 Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
@@ -171,7 +179,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#0C26C0F0"/>
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentOverlay0C}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -185,7 +193,7 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Foreground" Value="#060A10"/>
-        <Setter Property="Background" Value="{StaticResource BlueGradientBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BlueGradientBrush}"/>
         <Setter Property="Padding" Value="28,11"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -274,7 +282,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background"  Value="#16FFFFFF"/>
-                            <Setter TargetName="border" Property="BorderBrush" Value="#2026C0F0"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentOverlay20}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.35"/>
@@ -310,7 +318,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background"  Value="#14FFFFFF"/>
-                            <Setter TargetName="border" Property="BorderBrush" Value="#1A26C0F0"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentOverlay1A}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -340,7 +348,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="#3026C0F0"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource AccentOverlay30}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -379,7 +387,7 @@
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsHighlighted" Value="True">
-                                        <Setter TargetName="bg" Property="Background" Value="#1826C0F0"/>
+                                        <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentOverlay18}"/>
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
@@ -411,10 +419,10 @@
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="bg" Property="Background" Value="#18FFFFFF"/>
-                                            <Setter TargetName="bg" Property="BorderBrush" Value="#2026C0F0"/>
+                                            <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentOverlay20}"/>
                                         </Trigger>
                                         <Trigger Property="IsChecked" Value="True">
-                                            <Setter TargetName="bg" Property="BorderBrush" Value="#3026C0F0"/>
+                                            <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentOverlay30}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -441,7 +449,7 @@
                                PopupAnimation="Fade"
                                Focusable="False">
                             <Border Background="#F0080D14"
-                                    BorderBrush="#2026C0F0"
+                                    BorderBrush="{StaticResource AccentOverlay20}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="0,3"
@@ -661,7 +669,7 @@
         <Setter Property="Background" Value="{StaticResource CardGradientBrush}"/>
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Padding" Value="22"/>
-        <Setter Property="BorderBrush" Value="#0C26C0F0"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentOverlay0C}"/>
         <Setter Property="BorderThickness" Value="1"/>
     </Style>
 

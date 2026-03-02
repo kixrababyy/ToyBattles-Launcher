@@ -1,7 +1,62 @@
-﻿using System.Windows;
+using System.Windows;
+using Launcher.App.Views;
+using Launcher.Core.Services;
 
 namespace Launcher.App;
 
 public partial class App : Application
 {
+    private async void App_Startup(object sender, StartupEventArgs e)
+    {
+#if VALENTINE_THEME
+        Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/Themes/Valentine.xaml", UriKind.Absolute)
+        });
+#endif
+
+        var splash = new SplashWindow();
+        splash.Show();
+
+        var applyUpdate = false;
+
+        try
+        {
+            var (needsUpdate, remoteVersion) = await LauncherUpdateService.CheckAsync();
+
+            if (needsUpdate && remoteVersion != null)
+            {
+                var label = $"v{remoteVersion.Major}.{remoteVersion.Minor}.{remoteVersion.Build}";
+                splash.SetStatus($"Downloading launcher update {label}...");
+
+                var progress = new Progress<DownloadProgress>(p => splash.SetDownloadProgress(p));
+
+                await LauncherUpdateService.DownloadAndApplyAsync(progress);
+
+                splash.SetStatus("Restarting...");
+                await Task.Delay(600);
+                applyUpdate = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal — log and fall through to normal startup
+            LogService.LogError("Launcher self-update failed, continuing with current version", ex);
+        }
+
+        if (applyUpdate)
+        {
+            // Bat script has been launched; exit so it can replace the exe
+            splash.Close();
+            Shutdown();
+            return;
+        }
+
+        // Normal launch — no update available (or update failed gracefully)
+        splash.Close();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+        var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        mainWindow.Show();
+    }
 }

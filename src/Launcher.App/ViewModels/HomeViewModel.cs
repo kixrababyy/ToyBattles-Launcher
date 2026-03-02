@@ -124,13 +124,6 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _serverStatusBrush, value);
     }
 
-    private string _launcherUpdateText = string.Empty;
-    public string LauncherUpdateText
-    {
-        get => _launcherUpdateText;
-        set => SetProperty(ref _launcherUpdateText, value);
-    }
-
     private bool _isSettingsOpen;
     public bool IsSettingsOpen
     {
@@ -207,7 +200,6 @@ public class HomeViewModel : ViewModelBase
     public ICommand ActionCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
-    public ICommand OpenLauncherDownloadCommand { get; }
     public ICommand ToggleSettingsCommand { get; }
 
     /// <summary>Fired when the game exits and the launcher should restore from tray.</summary>
@@ -225,9 +217,6 @@ public class HomeViewModel : ViewModelBase
             DownloadSizeText = string.Empty;
             await CheckForUpdatesAsync();
         });
-        OpenLauncherDownloadCommand = new RelayCommand(_ =>
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
-                "https://toybattles.net/") { UseShellExecute = true }));
         ToggleSettingsCommand = new RelayCommand(_ => IsSettingsOpen = !IsSettingsOpen);
     }
 
@@ -289,9 +278,6 @@ public class HomeViewModel : ViewModelBase
 
         // Ping server status in background
         _ = DoPingServerStatusAsync();
-
-        // Check for launcher self-update in background
-        _ = DoCheckLauncherVersionAsync();
 
         await CheckForUpdatesAsync();
 
@@ -597,23 +583,6 @@ public class HomeViewModel : ViewModelBase
             ServerStatusText = "Offline";
             ServerStatusBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0x47, 0x57));
         }
-    }
-
-    private async Task DoCheckLauncherVersionAsync()
-    {
-        try
-        {
-            const string versionUrl = "http://cdn.toybattles.net/launcher_version.txt";
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var text = (await client.GetStringAsync(versionUrl)).Trim();
-
-            var current = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
-            if (current == null || !System.Version.TryParse(text, out var remote)) return;
-
-            if (remote > current)
-                LauncherUpdateText = $"Launcher v{remote.Major}.{remote.Minor}.{remote.Build} available (you have v{current.Major}.{current.Minor}.{current.Build}) — click Download to update.";
-        }
-        catch { /* Non-critical — silently skip if CDN doesn't have this file */ }
     }
 
     private void LaunchGame()
