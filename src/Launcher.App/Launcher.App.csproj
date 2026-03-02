@@ -31,36 +31,28 @@
 
   <ItemGroup>
     <!-- Assets: embedded inside the exe; disk files override if present -->
-    <!-- Exclude logo/banner variants — handled explicitly below so Valentine build gets its own images -->
+    <!-- Exclude logo/banner variants — handled explicitly below -->
     <EmbeddedResource Include="Assets\**" Exclude="Assets\logo*.png;Assets\banner*.png">
       <LogicalName>Assets/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 
-  <!-- Normal build: embed standard logo and banner -->
-  <ItemGroup Condition="'$(Configuration)' != 'Valentine'">
+  <!-- Always embed both standard and valentine logo/banner under their own names -->
+  <!-- The runtime loader tries _valentine first, then falls back to the standard -->
+  <ItemGroup>
     <EmbeddedResource Include="Assets\logo.png">
       <LogicalName>Assets/logo.png</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets\banner.png">
       <LogicalName>Assets/banner.png</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <!-- Valentine build: embed valentine logo/banner under the standard names -->
-  <ItemGroup Condition="'$(Configuration)' == 'Valentine'">
     <EmbeddedResource Include="Assets\logo_valentine.png">
-      <LogicalName>Assets/logo.png</LogicalName>
+      <LogicalName>Assets/logo_valentine.png</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets\banner_valentine.png">
-      <LogicalName>Assets/banner.png</LogicalName>
+      <LogicalName>Assets/banner_valentine.png</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-
-  <!-- Valentine build configuration -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Valentine'">
-    <DefineConstants>$(DefineConstants);VALENTINE_THEME</DefineConstants>
-  </PropertyGroup>
 
   <!-- Wallpapers: same images for all builds; theme tint is applied at runtime via WallpaperTintBrush -->
   <ItemGroup>

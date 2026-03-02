@@ -2,6 +2,8 @@
 
 A modern, dark-themed WPF game launcher for **ToyBattles: MicroVolts Recharged**. Features automatic updates, full game installation, file repair, floating particle effects, and animated download UI.
 
+# Valentine Theme
+
 ---
 
 ## Quick Start
