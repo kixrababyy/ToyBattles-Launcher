@@ -44,6 +44,32 @@ public partial class MainWindow : Window
                 _trayIcon?.ShowBalloonTip(title, msg, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
         };
 
+        // Confirm re-download when switching to a server with different game files (e.g. SEA)
+        _viewModel.HomeVM.ConfirmRedownloadRequested += () =>
+        {
+            var result = MessageBox.Show(
+                "The SEA server uses completely different game files.\n\n" +
+                "Switching to this server will require you to download the game again.\n\n" +
+                "Do you want to continue?",
+                "Re-download Required",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            return result == MessageBoxResult.Yes;
+        };
+
+        // Prompt user when a newer launcher version is available on GitHub
+        _viewModel.HomeVM.LauncherUpdateAvailable += version =>
+        {
+            var result = MessageBox.Show(
+                $"A new version of ToyBattles Launcher (v{version}) is available.\n\n" +
+                "The launcher will restart automatically after downloading.\n\n" +
+                "Update now?",
+                "Launcher Update Available",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            return result == MessageBoxResult.Yes;
+        };
+
         Loaded += async (_, _) =>
         {
             await _viewModel.InitializeAsync();
@@ -52,17 +78,6 @@ public partial class MainWindow : Window
             InitTrayIcon();
             ApplyRoundClip();
             InnerGrid.SizeChanged += (_, _) => ApplyRoundClip();
-        };
-
-        // Minimize to tray instead of taskbar when minimized
-        StateChanged += (_, _) =>
-        {
-            if (WindowState == WindowState.Minimized)
-            {
-                Hide();
-                if (_trayIcon != null)
-                    _trayIcon.Visibility = Visibility.Visible;
-            }
         };
 
         // Clean up on close

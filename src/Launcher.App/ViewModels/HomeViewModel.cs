@@ -145,11 +145,12 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _isSettingsOpen, value);
     }
 
-    public static string[] ServerOptions { get; } = ["Main Build", "Test Server"];
+    public static string[] ServerOptions { get; } = ["Main Build", "SEA Server", "Test Server"];
 
     private static readonly Dictionary<string, string> ServerAddresses = new()
     {
         ["Main Build"] = "https://cdn.toybattles.net/ENG",
+        ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
         ["Test Server"] = "http://127.0.0.1",
     };
 
@@ -172,11 +173,39 @@ public class HomeViewModel : ViewModelBase
         get => _selectedServer;
         set
         {
-            if (SetProperty(ref _selectedServer, value))
+            if (_selectedServer == value) return;
+
+            var previous = _selectedServer;
+            _selectedServer = value;
+            OnPropertyChanged();
+
+            // Switching to SEA requires a full re-download as the game files are different
+            if (value == "SEA Server" && !string.IsNullOrEmpty(_localState.GameRootPath))
             {
-                _localState.ServerProfile = value;
-                _localState.Save();
-                ApplyServerProfile();
+                var confirmed = ConfirmRedownloadRequested?.Invoke() ?? false;
+                if (!confirmed)
+                {
+                    // Revert selection
+                    _selectedServer = previous;
+                    OnPropertyChanged();
+                    return;
+                }
+
+                // Clear installed game — user must re-download for SEA
+                _localState.GameRootPath = null;
+                _localState.InstalledVersion = null;
+                InstalledVersionText = string.Empty;
+                RemoteVersionText = string.Empty;
+            }
+
+            _localState.ServerProfile = value;
+            _localState.Save();
+            ApplyServerProfile();
+
+            if (value == "SEA Server" && string.IsNullOrEmpty(_localState.GameRootPath))
+            {
+                State = LauncherState.NeedGameRoot;
+                StatusText = "SEA server selected. Click INSTALL to download the SEA game files.";
             }
         }
     }
@@ -221,6 +250,18 @@ public class HomeViewModel : ViewModelBase
 
     /// <summary>Fired when a tray balloon notification should be shown.</summary>
     public event Action<string, string>? ShowBalloonRequested;
+
+    /// <summary>
+    /// Fired when switching to a server that requires a full re-download.
+    /// The handler should show a confirmation dialog and return true to proceed.
+    /// </summary>
+    public event Func<bool>? ConfirmRedownloadRequested;
+
+    /// <summary>
+    /// Fired when a newer version of the launcher is available on GitHub.
+    /// The handler should show a prompt and return true if the user wants to update.
+    /// </summary>
+    public event Func<Version, bool>? LauncherUpdateAvailable;
 
     public HomeViewModel()
     {
@@ -301,6 +342,9 @@ public class HomeViewModel : ViewModelBase
 
         // Verify cgd.dip against remote (Adler32) in background after update check
         _ = CheckCgdDipAsync();
+
+        // Check for a newer launcher build on GitHub (non-blocking)
+        _ = CheckLauncherUpdateAsync();
     }
 
     /// <summary>
@@ -569,6 +613,38 @@ public class HomeViewModel : ViewModelBase
             LogService.LogError("Update failed", ex);
             State = LauncherState.Error;
             StatusText = $"Update failed: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Checks GitHub Releases for a newer Launcher.exe. If found and the user agrees,
+    /// downloads and applies the update, then restarts the launcher.
+    /// </summary>
+    private async Task CheckLauncherUpdateAsync()
+    {
+        var (needsUpdate, remoteVersion) = await LauncherUpdateService.CheckAsync();
+        if (!needsUpdate || remoteVersion == null || LauncherUpdateAvailable == null)
+            return;
+
+        // Ask user on the UI thread (MessageBox must run on UI thread)
+        bool shouldUpdate = await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+            () => LauncherUpdateAvailable.Invoke(remoteVersion));
+
+        if (!shouldUpdate) return;
+
+        try
+        {
+            StatusText = "Downloading launcher update...";
+            var progress = new Progress<DownloadProgress>(p => StatusText = p.StatusText);
+            await LauncherUpdateService.DownloadAndApplyAsync(progress);
+            // Swap script is now running — shut down so the bat can replace the exe
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+                () => System.Windows.Application.Current.Shutdown());
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError("Launcher self-update failed", ex);
+            StatusText = "Launcher update failed. Will try again next launch.";
         }
     }
 

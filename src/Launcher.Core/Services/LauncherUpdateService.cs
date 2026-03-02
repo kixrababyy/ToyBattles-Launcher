@@ -9,10 +9,8 @@ namespace Launcher.Core.Services;
 /// </summary>
 public static class LauncherUpdateService
 {
-    // TODO: Replace OWNER and REPO with your actual GitHub username and repository name.
-    // e.g. "https://api.github.com/repos/MyUsername/MyRepo/releases/latest"
-    private const string GitHubOwner = "OWNER";
-    private const string GitHubRepo  = "REPO";
+    private const string GitHubOwner = "kixrababyy";
+    private const string GitHubRepo  = "ToyBattles-Launcher";
 
     private static string ApiUrl      => $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
     private static string DownloadUrl => $"https://github.com/{GitHubOwner}/{GitHubRepo}/releases/latest/download/Launcher.exe";
