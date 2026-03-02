@@ -151,18 +151,24 @@ public partial class MainWindow : Window
 
         BitmapImage? img = null;
 
-        // Try disk files first
-        foreach (var ext in extensions)
+        // Try disk files — valentine variant first, then default
+        string[] names = ["logo_valentine", "logo"];
+        foreach (var name in names)
         {
-            var logoPath = Path.Combine(baseDir, "Assets", $"logo{ext}");
-            if (File.Exists(logoPath))
+            foreach (var ext in extensions)
             {
-                try { img = EmbeddedImageLoader.LoadFromFile(logoPath); } catch { }
-                if (img != null) break;
+                var logoPath = Path.Combine(baseDir, "Assets", $"{name}{ext}");
+                if (File.Exists(logoPath))
+                {
+                    try { img = EmbeddedImageLoader.LoadFromFile(logoPath); } catch { }
+                    if (img != null) break;
+                }
             }
+            if (img != null) break;
         }
 
-        // Fall back to embedded resource
+        // Fall back to embedded resources — valentine first, then default
+        img ??= EmbeddedImageLoader.LoadFromResource("Assets/logo_valentine.png");
         img ??= EmbeddedImageLoader.LoadFromResource("Assets/logo.png");
 
         if (img == null) return;
@@ -216,10 +222,13 @@ public partial class MainWindow : Window
     {
         _wallpapers = new List<BitmapImage>();
 
-        // 1) Try disk wallpapers first (allows user override)
-        var wallpaperDir = Path.Combine(AppContext.BaseDirectory, "wallpapers");
-        if (Directory.Exists(wallpaperDir))
+        // 1) Try valentine wallpapers first, then regular wallpapers
+        string[] wallpaperDirs = ["wallpapers-valentine", "wallpapers"];
+        foreach (var dirName in wallpaperDirs)
         {
+            var wallpaperDir = Path.Combine(AppContext.BaseDirectory, dirName);
+            if (!Directory.Exists(wallpaperDir)) continue;
+
             var files = Directory
                 .EnumerateFiles(wallpaperDir)
                 .Where(f =>
@@ -234,6 +243,8 @@ public partial class MainWindow : Window
                 try { _wallpapers.Add(EmbeddedImageLoader.LoadFromFile(file)); }
                 catch { /* skip */ }
             }
+
+            if (_wallpapers.Count > 0) break;
         }
 
         // 2) If no disk wallpapers, use embedded resources

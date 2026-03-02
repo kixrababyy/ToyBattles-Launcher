@@ -34,18 +34,24 @@ public partial class HomeView : UserControl
 
         BitmapImage? img = null;
 
-        // Try disk files first
-        foreach (var ext in extensions)
+        // Try disk files — valentine variant first, then default
+        string[] names = ["banner_valentine", "banner"];
+        foreach (var name in names)
         {
-            var bannerPath = Path.Combine(baseDir, "Assets", $"banner{ext}");
-            if (File.Exists(bannerPath))
+            foreach (var ext in extensions)
             {
-                try { img = EmbeddedImageLoader.LoadFromFile(bannerPath); } catch { }
-                if (img != null) break;
+                var bannerPath = Path.Combine(baseDir, "Assets", $"{name}{ext}");
+                if (File.Exists(bannerPath))
+                {
+                    try { img = EmbeddedImageLoader.LoadFromFile(bannerPath); } catch { }
+                    if (img != null) break;
+                }
             }
+            if (img != null) break;
         }
 
-        // Fall back to embedded resource
+        // Fall back to embedded resources — valentine first, then default
+        img ??= EmbeddedImageLoader.LoadFromResource("Assets/banner_valentine.png");
         img ??= EmbeddedImageLoader.LoadFromResource("Assets/banner.png");
 
         if (img == null) return;

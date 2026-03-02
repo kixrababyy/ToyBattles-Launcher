@@ -110,10 +110,10 @@
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bg" Property="Background" Value="#0C26C0F0"/>
+                                        <Setter TargetName="bg" Property="Background" Value="#0CFF4D7D"/>
                                     </Trigger>
                                     <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Banner}" Value="True">
-                                        <Setter TargetName="bg" Property="Background" Value="#1426C0F0"/>
+                                        <Setter TargetName="bg" Property="Background" Value="#14FF4D7D"/>
                                         <Setter TargetName="activeBar" Property="Opacity" Value="1"/>
                                     </DataTrigger>
                                 </ControlTemplate.Triggers>
@@ -153,7 +153,7 @@
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Home}" Value="True">
-                                                    <Setter Property="Background" Value="#1426C0F0"/>
+                                                    <Setter Property="Background" Value="#14FF4D7D"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -249,9 +249,9 @@
                     <Rectangle IsHitTestVisible="False">
                         <Rectangle.Fill>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#C0080D14" Offset="0"/>
-                                <GradientStop Color="#B01A0A28" Offset="0.5"/>
-                                <GradientStop Color="#C00B0E22" Offset="1"/>
+                                <GradientStop Color="#C0120810" Offset="0"/>
+                                <GradientStop Color="#B0160810" Offset="0.5"/>
+                                <GradientStop Color="#C0100610" Offset="1"/>
                             </LinearGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
@@ -259,7 +259,7 @@
                     <!-- ===== ANIMATED BACKGROUND ORBS ===== -->
                     <Grid IsHitTestVisible="False">
 
-                        <!-- Orb 1: Brand Blue — top right -->
+                        <!-- Orb 1: Rose pink — top right -->
                         <Ellipse x:Name="OrbRed"
                                  Width="680" Height="680"
                                  HorizontalAlignment="Right"
@@ -269,7 +269,7 @@
                                  Opacity="0.06">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#26C0F0" Offset="0"/>
+                                    <GradientStop Color="#FF4D7D" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -307,7 +307,7 @@
                             </Ellipse.Triggers>
                         </Ellipse>
 
-                        <!-- Orb 2: Blue — bottom left -->
+                        <!-- Orb 2: Deep crimson — bottom left -->
                         <Ellipse x:Name="OrbBlue"
                                  Width="520" Height="520"
                                  HorizontalAlignment="Left"
@@ -317,7 +317,7 @@
                                  Opacity="0.05">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#2860FF" Offset="0"/>
+                                    <GradientStop Color="#CC0033" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -356,7 +356,7 @@
                             </Ellipse.Triggers>
                         </Ellipse>
 
-                        <!-- Orb 3: Brand Gold — mid right -->
+                        <!-- Orb 3: Valentine red — mid right -->
                         <Ellipse x:Name="OrbPurple"
                                  Width="320" Height="320"
                                  HorizontalAlignment="Right"
@@ -366,7 +366,7 @@
                                  Opacity="0.04">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#FFB800" Offset="0"/>
+                                    <GradientStop Color="#FF1744" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -405,7 +405,7 @@
                             </Ellipse.Triggers>
                         </Ellipse>
 
-                        <!-- Orb 4: Cyan — top left accent -->
+                        <!-- Orb 4: Blush pink — top left accent -->
                         <Ellipse x:Name="OrbCyan"
                                  Width="200" Height="200"
                                  HorizontalAlignment="Left"
@@ -415,7 +415,7 @@
                                  Opacity="0.03">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#00C8FF" Offset="0"/>
+                                    <GradientStop Color="#FF85AB" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -465,8 +465,8 @@
                         <Rectangle.Fill>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                 <GradientStop Color="Transparent" Offset="0"/>
-                                <GradientStop Color="#CC080810" Offset="0.6"/>
-                                <GradientStop Color="#F0080810" Offset="1"/>
+                                <GradientStop Color="#CC12080C" Offset="0.6"/>
+                                <GradientStop Color="#F012080C" Offset="1"/>
                             </LinearGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
@@ -495,8 +495,8 @@
                         </Border.Style>
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                <GradientStop Color="#D0020408" Offset="0"/>
-                                <GradientStop Color="#E0060912" Offset="1"/>
+                                <GradientStop Color="#D0100608" Offset="0"/>
+                                <GradientStop Color="#E010080C" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
 
@@ -512,13 +512,13 @@
                                            Margin="0,0,0,4">
                                     <TextBlock.Foreground>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#26C0F0" Offset="0"/>
-                                            <GradientStop Color="#FFB800" Offset="1"/>
+                                            <GradientStop Color="#FF4D7D" Offset="0"/>
+                                            <GradientStop Color="#FF1744" Offset="1"/>
                                         </LinearGradientBrush>
                                     </TextBlock.Foreground>
                                     <TextBlock.Effect>
                                         <DropShadowEffect BlurRadius="24" ShadowDepth="0"
-                                                          Color="#26C0F0" Opacity="0.4"/>
+                                                          Color="#FF4D7D" Opacity="0.4"/>
                                     </TextBlock.Effect>
                                 </TextBlock>
 
@@ -533,7 +533,7 @@
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                             <GradientStop Color="Transparent" Offset="0"/>
-                                            <GradientStop Color="#2026C0F0" Offset="0.5"/>
+                                            <GradientStop Color="#20FF4D7D" Offset="0.5"/>
                                             <GradientStop Color="Transparent" Offset="1"/>
                                         </LinearGradientBrush>
                                     </Border.Background>
