@@ -85,13 +85,13 @@ public static class LauncherUpdateService
 
         await File.WriteAllTextAsync(batPath, bat, ct);
 
-        // Start bat minimised so there is no visible console flash
+        // Run the swap bat directly via the shell — simpler and more reliable than
+        // nesting inside "cmd /c start /min", which can fail with "not enough memory"
         Process.Start(new ProcessStartInfo
         {
-            FileName = "cmd.exe",
-            Arguments = $"/c start /min \"\" \"{batPath}\"",
-            CreateNoWindow = true,
-            UseShellExecute = false
+            FileName = batPath,
+            UseShellExecute = true,
+            WindowStyle = ProcessWindowStyle.Minimized
         });
 
         LogService.Log($"Launcher update script started. Replacing with {tempExe}.");
