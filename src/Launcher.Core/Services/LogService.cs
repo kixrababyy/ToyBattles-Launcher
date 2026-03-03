@@ -26,9 +26,37 @@ public class LogService
     private static string CurrentLogPath =>
         Path.Combine(LogDirectory, $"launcher_{DateTime.Now:yyyy-MM-dd}.log");
 
-    public static void Log(string message)
+    public static void Log(string message) => Write($"[INFO]  {message}");
+
+    public static void LogWarning(string message) => Write($"[WARN]  {message}");
+
+    public static void LogError(string message, Exception? ex = null)
     {
-        var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}";
+        var msg = ex != null ? $"{message}: {ex.Message}" : message;
+        Write($"[ERROR] {msg}");
+    }
+
+    /// <summary>
+    /// Writes a bold section header — use at the start of major operations
+    /// (install, update, repair, launch) so log sections are easy to find.
+    /// </summary>
+    public static void LogSection(string title)
+    {
+        var bar = new string('═', 55);
+        Write($"\n{bar}\n  {title}\n{bar}");
+    }
+
+    /// <summary>
+    /// Writes a minor sub-step divider inside a section.
+    /// </summary>
+    public static void LogStep(string step)
+    {
+        Write($"── {step} ──────────────────────────────────────");
+    }
+
+    private static void Write(string message)
+    {
+        var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {message}";
         lock (Lock)
         {
             try
@@ -40,12 +68,6 @@ public class LogService
                 // Swallow I/O errors in logging — never crash the app from logging.
             }
         }
-    }
-
-    public static void LogError(string message, Exception? ex = null)
-    {
-        var msg = ex != null ? $"{message}: {ex.Message}" : message;
-        Log($"ERROR: {msg}");
     }
 
     public static void OpenLogsFolder()

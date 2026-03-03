@@ -19,6 +19,9 @@ public class LocalState
     public string? ServerIp { get; set; }
     public string? ServerProfile { get; set; }
 
+    /// <summary>Remembers the installed game root for each server profile.</summary>
+    public Dictionary<string, string?> ServerGameRoots { get; set; } = new();
+
     /// <summary>Cumulative playtime across all sessions, in seconds.</summary>
     public long TotalPlaytimeSeconds { get; set; } = 0;
 
@@ -63,7 +66,18 @@ public class LocalState
         try
         {
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<LocalState>(json, JsonOptions) ?? new LocalState();
+            var instance = JsonSerializer.Deserialize<LocalState>(json, JsonOptions) ?? new LocalState();
+
+            // Migrate: if old single GameRootPath exists but no per-server entry, seed it
+            if (!string.IsNullOrEmpty(instance.GameRootPath))
+            {
+                var activeServer = !string.IsNullOrEmpty(instance.ServerProfile)
+                    ? instance.ServerProfile : "Main Build";
+                if (!instance.ServerGameRoots.ContainsKey(activeServer))
+                    instance.ServerGameRoots[activeServer] = instance.GameRootPath;
+            }
+
+            return instance;
         }
         catch
         {

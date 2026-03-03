@@ -15,6 +15,28 @@ public class RepairViewModel : ViewModelBase
     private readonly InstallService _installService = new();
     private CancellationTokenSource? _cts;
 
+    private static readonly Dictionary<string, string> ServerAddresses = new()
+    {
+        ["Main Build"] = "https://cdn.toybattles.net/ENG",
+        ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
+        ["Test Server"] = "http://127.0.0.1",
+    };
+
+    /// <summary>
+    /// Returns the update base URL, falling back to the saved server profile if
+    /// updateinfo.ini is missing or has no UpdateAddress.
+    /// </summary>
+    private static string GetUpdateAddress(UpdateInfoConfig? updateInfo, LocalState state)
+    {
+        if (!string.IsNullOrEmpty(updateInfo?.UpdateAddress))
+            return updateInfo.UpdateAddress;
+
+        var profile = state.ServerProfile ?? "Main Build";
+        return ServerAddresses.TryGetValue(profile, out var addr)
+            ? addr
+            : "https://cdn.toybattles.net/ENG";
+    }
+
     private bool _isRepairing;
     public bool IsRepairing
     {
@@ -156,19 +178,13 @@ public class RepairViewModel : ViewModelBase
                 return;
             }
 
+            UpdateInfoConfig? updateInfo = null;
             var updateInfoPath = Path.Combine(state.GameRootPath, "updateinfo.ini");
-            if (!File.Exists(updateInfoPath))
-            {
-                StatusText = "updateinfo.ini not found in game directory.";
-                return;
-            }
+            if (File.Exists(updateInfoPath))
+                updateInfo = UpdateInfoConfig.Load(updateInfoPath);
 
-            var updateInfo = UpdateInfoConfig.Load(updateInfoPath);
-            if (string.IsNullOrEmpty(updateInfo.FullFileAddress))
-            {
-                StatusText = "Full file URL not configured.";
-                return;
-            }
+            // Build the base URL for downloading individual game files
+            var fullFileBaseUrl = $"{GetUpdateAddress(updateInfo, state).TrimEnd('/')}/microvolts/Full";
 
             var progress = new Progress<RepairService.RepairProgress>(p =>
             {
@@ -179,7 +195,7 @@ public class RepairViewModel : ViewModelBase
 
             var result = await _repairService.VerifyAndRepairAsync(
                 state.GameRootPath,
-                updateInfo.FullFileAddress,
+                fullFileBaseUrl,
                 progress);
 
             CurrentFileText = string.Empty;
@@ -224,20 +240,20 @@ public class RepairViewModel : ViewModelBase
                 return;
         }
 
-        // Load updateinfo.ini to find download URL
+        // Load updateinfo.ini if present — fall back to server profile address if missing
+        UpdateInfoConfig? updateInfo = null;
         var updateInfoPath = Path.Combine(installDir, "updateinfo.ini");
-        if (!File.Exists(updateInfoPath))
-        {
-            StatusText = "updateinfo.ini not found. Cannot determine download URL.";
-            return;
-        }
+        if (File.Exists(updateInfoPath))
+            updateInfo = UpdateInfoConfig.Load(updateInfoPath);
 
-        var updateInfo = UpdateInfoConfig.Load(updateInfoPath);
-        if (string.IsNullOrEmpty(updateInfo.FullFileAddress))
-        {
-            StatusText = "Full file URL not configured in updateinfo.ini.";
-            return;
-        }
+        // Derive the full-game archive URL from [update] addr (not the unreliable [FullFile] addr)
+        var updateAddress = GetUpdateAddress(updateInfo, state);
+        var fullFileAddr = $"{updateAddress.TrimEnd('/')}/microvolts/Full/Full.zip";
+
+        LogService.LogSection("REINSTALL");
+        LogService.Log($"Folder: {installDir}");
+        LogService.Log($"UpdateAddress: {updateAddress}");
+        LogService.Log($"FullFileAddr : {fullFileAddr}");
 
         IsRepairing = true;
         StatusText = "Starting full reinstall...";
@@ -256,7 +272,7 @@ public class RepairViewModel : ViewModelBase
         try
         {
             var gameRoot = await _installService.InstallFullGameAsync(
-                installDir, updateInfo.FullFileAddress, progress, _cts.Token);
+                installDir, fullFileAddr, progress, _cts.Token);
 
             if (gameRoot != null)
             {

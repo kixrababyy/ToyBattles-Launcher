@@ -179,33 +179,49 @@ public class HomeViewModel : ViewModelBase
             _selectedServer = value;
             OnPropertyChanged();
 
-            // Switching to SEA requires a full re-download as the game files are different
-            if (value == "SEA Server" && !string.IsNullOrEmpty(_localState.GameRootPath))
+            // Remember the game root for the server we're leaving
+            _localState.ServerGameRoots[previous] = _localState.GameRootPath;
+
+            // First time switching to SEA (no stored SEA install) — warn about separate download
+            _localState.ServerGameRoots.TryGetValue("SEA Server", out var existingSeaRoot);
+            if (value == "SEA Server" && string.IsNullOrEmpty(existingSeaRoot))
             {
                 var confirmed = ConfirmRedownloadRequested?.Invoke() ?? false;
                 if (!confirmed)
                 {
-                    // Revert selection
                     _selectedServer = previous;
                     OnPropertyChanged();
                     return;
                 }
-
-                // Clear installed game — user must re-download for SEA
-                _localState.GameRootPath = null;
-                _localState.InstalledVersion = null;
-                InstalledVersionText = string.Empty;
-                RemoteVersionText = string.Empty;
             }
+
+            // Restore game root for the server we're switching to
+            _localState.ServerGameRoots.TryGetValue(value, out var restoredRoot);
+            if (!string.IsNullOrEmpty(restoredRoot) && !ValidateCriticalFiles(restoredRoot))
+                restoredRoot = null;
+
+            _localState.GameRootPath = restoredRoot;
+            _localState.InstalledVersion = null;
+            InstalledVersionText = string.Empty;
+            RemoteVersionText = string.Empty;
 
             _localState.ServerProfile = value;
             _localState.Save();
             ApplyServerProfile();
 
-            if (value == "SEA Server" && string.IsNullOrEmpty(_localState.GameRootPath))
+            if (string.IsNullOrEmpty(_localState.GameRootPath))
             {
                 State = LauncherState.NeedGameRoot;
-                StatusText = "SEA server selected. Click INSTALL to download the SEA game files.";
+                StatusText = value == "SEA Server"
+                    ? "SEA server selected. Click INSTALL to download the SEA game files."
+                    : "Game not installed. Click INSTALL to download and set up the game.";
+            }
+            else
+            {
+                LoadLocalVersion();
+                State = LauncherState.Checking;
+                StatusText = "Checking for updates...";
+                _ = CheckForUpdatesAsync();
             }
         }
     }
@@ -313,7 +329,10 @@ public class HomeViewModel : ViewModelBase
         // so fresh installs use the correct FullFileAddress
         if (!string.IsNullOrEmpty(_localState.ServerProfile) &&
             Array.IndexOf(ServerOptions, _localState.ServerProfile) >= 0)
+        {
             _selectedServer = _localState.ServerProfile;
+            OnPropertyChanged(nameof(SelectedServer));
+        }
 
         ApplyServerProfile();
 
@@ -796,7 +815,7 @@ public class HomeViewModel : ViewModelBase
             _localState.PendingSessionStartUtc = null;
             _localState.Save();
             State = LauncherState.Error;
-            StatusText = "Failed to launch game. Check if MicroVolts.exe exists.";
+            StatusText = "Failed to launch game. Check if ToyBattles is installed correctly.";
         }
     }
 
@@ -812,6 +831,20 @@ public class HomeViewModel : ViewModelBase
         if (string.IsNullOrEmpty(installDir))
         {
             // User cancelled the folder picker
+            return;
+        }
+
+        // Check if game is already installed in the selected folder — skip download if so
+        if (ValidateCriticalFiles(installDir))
+        {
+            StatusText = "Existing installation detected. Checking for updates...";
+            _localState.GameRootPath = installDir;
+            _localState.ServerGameRoots[_selectedServer] = installDir;
+            _localState.Save();
+            LoadLocalVersion();
+            await CheckForUpdatesAsync();
+            if (State == LauncherState.UpdateAvailable)
+                await DownloadAndApplyUpdateAsync();
             return;
         }
 
@@ -867,7 +900,8 @@ public class HomeViewModel : ViewModelBase
                 return;
             }
 
-            LogService.Log($"Installing game to: {installDir}");
+            LogService.LogSection($"INSTALL — {_selectedServer}");
+            LogService.Log($"Folder: {installDir}");
 
             StatusText = $"Installing to: {installDir}";
 
@@ -877,6 +911,7 @@ public class HomeViewModel : ViewModelBase
             if (gameRoot != null)
             {
                 _localState.GameRootPath = gameRoot;
+                _localState.ServerGameRoots[_selectedServer] = gameRoot;
                 _localState.Save();
 
                 // Copy updateinfo.ini into the game root so future launches can find update URLs
@@ -897,6 +932,11 @@ public class HomeViewModel : ViewModelBase
 
                 // Load the version from the freshly installed files
                 LoadLocalVersion();
+
+                // Sync cgd.dip from CDN — the ZIP may contain a stale copy.
+                // This normally runs on launcher startup; doing it here ensures the game
+                // can connect on the very first launch without requiring a restart.
+                await CheckCgdDipAsync();
 
                 StatusText = $"Installed to: {gameRoot}. Checking for updates...";
                 ProgressPercent = 100;
@@ -927,6 +967,38 @@ public class HomeViewModel : ViewModelBase
             State = LauncherState.Error;
             StatusText = $"Installation failed: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Re-reads state from disk and updates Home if the game root changed
+    /// (e.g. the user pointed Settings to a different folder).
+    /// </summary>
+    public void RefreshStateFromDisk()
+    {
+        var onDisk = LocalState.Load();
+
+        // Nothing relevant changed — skip
+        if (onDisk.GameRootPath == _localState.GameRootPath)
+            return;
+
+        _localState = onDisk;
+        ApplyServerProfile();
+
+        if (string.IsNullOrEmpty(_localState.GameRootPath) ||
+            !ValidateCriticalFiles(_localState.GameRootPath))
+        {
+            _localState.GameRootPath = null;
+            State = LauncherState.NeedGameRoot;
+            StatusText = "Game not installed. Click INSTALL to download and set up the game.";
+            return;
+        }
+
+        LoadLocalVersion();
+        ApplyServerProfile(); // restore correct UpdateAddress after LoadLocalVersion may override it
+        InstalledVersionText = _localState.InstalledVersion is { } v ? $"Installed: {v}" : string.Empty;
+        State = LauncherState.Checking;
+        StatusText = "Checking for updates...";
+        _ = CheckForUpdatesAsync();
     }
 
     private static string? FindGameRoot(string startDir)

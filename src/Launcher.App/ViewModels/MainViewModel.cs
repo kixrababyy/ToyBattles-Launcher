@@ -49,7 +49,7 @@ public class MainViewModel : ViewModelBase
         RepairVM = new RepairViewModel();
         _currentPage = HomeVM;
 
-        NavigateHomeCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Home"; IsBannerMode = false; });
+        NavigateHomeCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Home"; IsBannerMode = false; HomeVM.RefreshStateFromDisk(); });
         ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; });
         NavigateSettingsCommand = new RelayCommand(_ => { CurrentPage = SettingsVM; SelectedNav = "Settings"; IsBannerMode = false; SettingsVM.Refresh(); });
         NavigateRepairCommand = new RelayCommand(_ => { CurrentPage = RepairVM; SelectedNav = "Repair"; IsBannerMode = false; });

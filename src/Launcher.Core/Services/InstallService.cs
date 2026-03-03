@@ -53,17 +53,22 @@ public class InstallService
         IProgress<DownloadProgress>? progress = null,
         CancellationToken ct = default)
     {
+        LogService.LogSection("FULL GAME INSTALL");
+        LogService.Log($"Target folder : {installDir}");
+        LogService.Log($"FullFileAddress: {fullFileAddress}");
+
         Directory.CreateDirectory(installDir);
 
-        // Determine the actual download URL
+        // Phase 1: Resolve the actual download URL
+        LogService.LogStep("Resolving archive URL");
         var archiveUrl = await ResolveArchiveUrlAsync(fullFileAddress, ct);
         if (archiveUrl == null)
         {
-            LogService.LogError("Could not resolve full game archive URL.");
+            LogService.LogError("Could not resolve full game archive URL — all probes failed.");
             return null;
         }
 
-        LogService.Log($"Full game archive URL: {archiveUrl}");
+        LogService.Log($"Resolved URL  : {archiveUrl}");
 
         // Determine file extension for extraction method
         var extension = Path.GetExtension(new Uri(archiveUrl).AbsolutePath).ToLowerInvariant();
@@ -71,16 +76,14 @@ public class InstallService
 
         try
         {
-            // Phase 1: Download
-            progress?.Report(new DownloadProgress
-            {
-                StatusText = "Downloading game files..."
-            });
+            // Phase 2: Download
+            LogService.LogStep("Downloading archive");
+            progress?.Report(new DownloadProgress { StatusText = "Downloading game files..." });
 
             var downloaded = await _downloadService.DownloadFileAsync(archiveUrl, archivePath, progress, ct);
             if (!downloaded)
             {
-                LogService.LogError("Failed to download full game archive.");
+                LogService.LogError("Download failed — see download attempts above.");
                 return null;
             }
 
@@ -91,99 +94,116 @@ public class InstallService
                 return null;
             }
 
-            LogService.Log($"Archive downloaded: {DownloadService.FormatBytes(fileInfo.Length)}");
+            LogService.Log($"Archive size  : {DownloadService.FormatBytes(fileInfo.Length)}");
 
-            // Phase 2: Extract
-            progress?.Report(new DownloadProgress
-            {
-                StatusText = "Extracting game files...",
-                ProgressPercent = 0
-            });
+            // Phase 3: Extract
+            LogService.LogStep($"Extracting ({extension.TrimStart('.')?.ToUpper()})");
+            progress?.Report(new DownloadProgress { StatusText = "Extracting game files...", ProgressPercent = 0 });
 
             bool extracted;
             if (extension is ".cab")
-            {
                 extracted = await ExtractCabAsync(archivePath, installDir, ct);
-            }
             else
-            {
                 extracted = await ExtractZipAsync(archivePath, installDir, progress, ct);
-            }
 
             if (!extracted)
             {
-                LogService.LogError("Failed to extract game archive.");
+                LogService.LogError("Extraction failed.");
                 return null;
             }
 
-            // Phase 3: Verify — check that Bin/MicroVolts.exe exists
-            // The archive might extract directly or into a subdirectory
+            // Phase 4: Verify game root
+            LogService.LogStep("Verifying game files");
             var gameRoot = FindGameRootInDir(installDir);
             if (gameRoot == null)
             {
-                LogService.LogError($"Game executable not found after extraction in {installDir}");
+                LogService.LogError($"Game executable not found after extraction in: {installDir}");
                 return null;
             }
 
-            LogService.Log($"Installation complete. Game root: {gameRoot}");
-
-            progress?.Report(new DownloadProgress
-            {
-                StatusText = "Installation complete!",
-                ProgressPercent = 100
-            });
+            LogService.Log($"Game root     : {gameRoot}");
+            LogService.Log("INSTALL COMPLETE");
+            progress?.Report(new DownloadProgress { StatusText = "Installation complete!", ProgressPercent = 100 });
 
             return gameRoot;
         }
         finally
         {
-            // Clean up temp archive
             try { if (File.Exists(archivePath)) File.Delete(archivePath); }
             catch { /* best effort */ }
         }
     }
 
     /// <summary>
-    /// Resolve the archive URL. If the address ends with /, try known filenames.
-    /// If it points directly to a file, use it as-is.
+    /// Resolve the archive URL. If the address already ends in a known extension, use it directly.
+    /// Otherwise probe candidate URLs (suffix + directory variants) with plain GET to find the file.
     /// </summary>
     private async Task<string?> ResolveArchiveUrlAsync(string fullFileAddress, CancellationToken ct)
     {
         var trimmed = fullFileAddress.TrimEnd('/');
 
-        // If the URL already points to a file (has a known extension), use it directly
-        var uri = new Uri(trimmed);
-        var lastSegment = uri.Segments.LastOrDefault()?.TrimEnd('/') ?? "";
+        // Already a direct file URL — use as-is
+        var lastSegment = new Uri(trimmed).Segments.LastOrDefault()?.TrimEnd('/') ?? "";
         if (lastSegment.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
             lastSegment.EndsWith(".cab", StringComparison.OrdinalIgnoreCase) ||
-            lastSegment.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
+            lastSegment.EndsWith(".7z",  StringComparison.OrdinalIgnoreCase))
         {
+            LogService.Log($"URL has extension — using directly: {trimmed}");
             return trimmed;
         }
 
-        // Otherwise, try known filenames appended to the base URL
-        foreach (var name in KnownArchiveNames)
+        // Build candidate list:
+        //  1. Suffix variants         → e.g. ".../Full.zip"
+        //  2. Known subdirectory path → ".../microvolts/Full/Full.zip" under the parent dir
+        //     (the CDN serves the archive at <base>/microvolts/Full/Full.zip where
+        //      <base> is one level up from FullFileAddress)
+        //  3. Directory variants       → e.g. ".../Full/Full.zip"
+        var candidates = new List<string>();
+        foreach (var ext in new[] { ".zip", ".cab", ".7z" })
+            candidates.Add(trimmed + ext);
+
+        var lastSlash = trimmed.LastIndexOf('/');
+        if (lastSlash > 0)
         {
-            var testUrl = $"{trimmed}/{name}";
+            var parentUrl = trimmed[..lastSlash];
+            candidates.Add($"{parentUrl}/microvolts/Full/Full.zip");
+            candidates.Add($"{parentUrl}/microvolts/full/full.zip");
+        }
+
+        foreach (var name in KnownArchiveNames)
+            candidates.Add($"{trimmed}/{name}");
+
+        LogService.Log($"Probing {candidates.Count} candidate URLs (plain GET, headers only)...");
+
+        using var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        probeClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+
+        foreach (var testUrl in candidates)
+        {
             try
             {
-                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-                using var request = new HttpRequestMessage(HttpMethod.Head, testUrl);
-                using var response = await http.SendAsync(request, ct);
+                using var request = new HttpRequestMessage(HttpMethod.Get, testUrl);
+                using var response = await probeClient.SendAsync(
+                    request, HttpCompletionOption.ResponseHeadersRead, ct);
 
+                var code = (int)response.StatusCode;
                 if (response.IsSuccessStatusCode)
                 {
-                    LogService.Log($"Found archive at: {testUrl}");
+                    LogService.Log($"  [ OK {code}] {testUrl}");
                     return testUrl;
                 }
+
+                LogService.Log($"  [{code}    ] {testUrl}");
             }
-            catch
+            catch (Exception ex)
             {
-                // Try next
+                LogService.Log($"  [ERR   ] {testUrl} — {ex.Message}");
             }
         }
 
-        // Last resort: try the URL as-is (maybe the server redirects)
+        // Nothing found — fall back to bare URL (may redirect or give a clearer error)
+        LogService.LogWarning($"All probes failed. Falling back to bare URL: {trimmed}");
         return trimmed;
     }
 

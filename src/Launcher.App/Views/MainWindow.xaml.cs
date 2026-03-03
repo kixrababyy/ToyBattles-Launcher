@@ -49,9 +49,9 @@ public partial class MainWindow : Window
         {
             var result = MessageBox.Show(
                 "The SEA server uses completely different game files.\n\n" +
-                "Switching to this server will require you to download the game again.\n\n" +
+                "You will need to download and install the SEA version separately.\n\n" +
                 "Do you want to continue?",
-                "Re-download Required",
+                "Separate Download Required",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
             return result == MessageBoxResult.Yes;
@@ -323,7 +323,7 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Select Game Directory (containing Bin\\MicroVolts.exe)"
+            Title = "Select ToyBattles Game Directory"
         };
 
         if (dialog.ShowDialog() == true)

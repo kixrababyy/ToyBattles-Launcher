@@ -26,7 +26,12 @@ public class DownloadService
 {
     private static readonly HttpClient HttpClient = new()
     {
-        Timeout = TimeSpan.FromMinutes(10)
+        Timeout = TimeSpan.FromMinutes(10),
+        DefaultRequestHeaders =
+        {
+            UserAgent = { System.Net.Http.Headers.ProductInfoHeaderValue.Parse(
+                "Mozilla/5.0") }
+        }
     };
 
     /// <summary>
@@ -56,12 +61,16 @@ public class DownloadService
         {
             try
             {
-                LogService.Log($"Starting download (attempt {attempt}/{MaxRetries}): {url}");
+                if (attempt == 1)
+                    LogService.Log($"Downloading: {url}");
+                else
+                    LogService.LogWarning($"Retry {attempt}/{MaxRetries}: {url}");
+
                 using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
                 response.EnsureSuccessStatusCode();
 
                 var totalBytes = response.Content.Headers.ContentLength ?? -1;
-                LogService.Log($"Total file size: {totalBytes} bytes");
+                LogService.Log($"File size: {(totalBytes >= 0 ? FormatBytes(totalBytes) : "unknown")}");
 
                 await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
                 await using var fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, true);
@@ -104,7 +113,7 @@ public class DownloadService
                     }
                 }
 
-                LogService.Log($"Download completed: {destPath}");
+                LogService.Log($"Download complete → {destPath}");
                 return true;
             }
             catch (OperationCanceledException)
@@ -113,12 +122,13 @@ public class DownloadService
             }
             catch (Exception ex) when (attempt < MaxRetries)
             {
-                LogService.LogError($"Download attempt {attempt} failed for {url}", ex);
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt)), ct);
+                var wait = (int)Math.Pow(2, attempt);
+                LogService.LogError($"Attempt {attempt} failed — retrying in {wait}s", ex);
+                await Task.Delay(TimeSpan.FromSeconds(wait), ct);
             }
             catch (Exception ex)
             {
-                LogService.LogError($"Download failed after {MaxRetries} attempts for {url}", ex);
+                LogService.LogError($"All {MaxRetries} download attempts failed for {url}", ex);
                 return false;
             }
         }
