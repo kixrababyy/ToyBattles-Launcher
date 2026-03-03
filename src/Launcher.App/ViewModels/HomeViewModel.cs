@@ -584,7 +584,14 @@ public class HomeViewModel : ViewModelBase
                 installedVersion,
                 _remotePatch,
                 progress,
-                _cts.Token);
+                _cts.Token,
+                onStepApplied: v =>
+                {
+                    // Save after each step so a mid-update failure resumes from here next time
+                    _localState.SetInstalledVersion(v);
+                    _localState.Save();
+                    InstalledVersionText = $"Installed: {v}";
+                });
 
             if (success)
             {

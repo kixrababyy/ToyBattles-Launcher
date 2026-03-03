@@ -93,7 +93,8 @@ public class PatchService
         GameVersion installedVersion,
         PatchConfig remotePatch,
         IProgress<DownloadProgress>? progress = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Action<GameVersion>? onStepApplied = null)
     {
         var steps = GetUpgradePath(installedVersion, remotePatch);
         if (steps.Count == 0)
@@ -116,6 +117,8 @@ public class PatchService
             }
 
             LogService.Log($"Successfully applied patch: {from} → {to}");
+            // Save progress immediately — if a later step fails, the next launch resumes from here
+            onStepApplied?.Invoke(to);
         }
 
         // Re-download the remote patch.ini to the local game root
