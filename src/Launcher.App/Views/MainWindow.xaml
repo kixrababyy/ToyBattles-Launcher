@@ -522,7 +522,7 @@
                                     </TextBlock.Effect>
                                 </TextBlock>
 
-                                <TextBlock Text="MicroVolts Recharged"
+                                <TextBlock Text="ToyBattles"
                                            FontSize="13" FontFamily="Segoe UI" FontWeight="Light"
                                            Foreground="#2A3A5A"
                                            HorizontalAlignment="Center"
