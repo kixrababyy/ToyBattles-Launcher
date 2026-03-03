@@ -17,7 +17,7 @@ public class RepairViewModel : ViewModelBase
 
     private static readonly Dictionary<string, string> ServerAddresses = new()
     {
-        ["Main Build"] = "https://cdn.toybattles.net/ENG",
+        ["Main Build"] = "http://cdn.toybattles.net/ENG",
         ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
         ["Test Server"] = "http://127.0.0.1",
     };
@@ -34,7 +34,7 @@ public class RepairViewModel : ViewModelBase
         var profile = state.ServerProfile ?? "Main Build";
         return ServerAddresses.TryGetValue(profile, out var addr)
             ? addr
-            : "https://cdn.toybattles.net/ENG";
+            : "http://cdn.toybattles.net/ENG";
     }
 
     private bool _isRepairing;

@@ -149,14 +149,14 @@ public class HomeViewModel : ViewModelBase
 
     private static readonly Dictionary<string, string> ServerAddresses = new()
     {
-        ["Main Build"] = "https://cdn.toybattles.net/ENG",
+        ["Main Build"] = "http://cdn.toybattles.net/ENG",
         ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
         ["Test Server"] = "http://127.0.0.1",
     };
 
     private string GetServerAddress() =>
         ServerAddresses.TryGetValue(_selectedServer, out var addr) && !string.IsNullOrEmpty(addr)
-            ? addr : "https://cdn.toybattles.net/ENG";
+            ? addr : "http://cdn.toybattles.net/ENG";
 
     /// <summary>Overrides _updateInfoConfig with URLs derived from the selected server profile.</summary>
     private void ApplyServerProfile()
