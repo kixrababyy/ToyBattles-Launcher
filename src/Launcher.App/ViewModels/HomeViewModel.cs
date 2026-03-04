@@ -351,6 +351,9 @@ public class HomeViewModel : ViewModelBase
             _localState.Save();
         }
 
+        // Check for a newer launcher build on GitHub (non-blocking) — runs regardless of game state
+        _ = CheckLauncherUpdateAsync();
+
         if (string.IsNullOrEmpty(_localState.GameRootPath))
         {
             State = LauncherState.NeedGameRoot;
@@ -368,9 +371,6 @@ public class HomeViewModel : ViewModelBase
 
         // Verify cgd.dip against remote (Adler32) in background after update check
         _ = CheckCgdDipAsync();
-
-        // Check for a newer launcher build on GitHub (non-blocking)
-        _ = CheckLauncherUpdateAsync();
     }
 
     /// <summary>
@@ -688,12 +688,10 @@ public class HomeViewModel : ViewModelBase
                 try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(LauncherUpdateService.ReleasesUrl) { UseShellExecute = true }); }
                 catch { }
             }
-            else
-            {
-                // User dismissed the manual-download prompt → skip this version
-                _localState.SkippedLauncherVersion = remoteStr;
-                _localState.Save();
-            }
+
+            // Either way the user has been told — don't show this again until a newer version exists
+            _localState.SkippedLauncherVersion = remoteStr;
+            _localState.Save();
             return;
         }
 
@@ -742,6 +740,10 @@ public class HomeViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            // Bat was never started — clear the attempt flag so we don't
+            // falsely show "swap failed" on the next launch
+            _localState.LastAttemptedUpdateVersion = null;
+            _localState.Save();
             State = stateBeforeUpdate;
             ProgressPercent = 0;
             StatusText = "Launcher update cancelled.";
@@ -749,6 +751,9 @@ public class HomeViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            // Same — download failed before the bat ran
+            _localState.LastAttemptedUpdateVersion = null;
+            _localState.Save();
             LogService.LogError("Launcher self-update failed", ex);
             State = stateBeforeUpdate;
             ProgressPercent = 0;
