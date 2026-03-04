@@ -40,6 +40,13 @@ public class InstallService
     }
 
     /// <summary>
+    /// The actual archive URL that was resolved and attempted during the last
+    /// <see cref="InstallFullGameAsync"/> call. Useful for surfacing a manual download link
+    /// when all automatic download methods fail.
+    /// </summary>
+    public string? LastResolvedArchiveUrl { get; private set; }
+
+    /// <summary>
     /// Download and install the full game to the specified directory.
     /// </summary>
     /// <param name="installDir">Where to extract the game files (the game root).</param>
@@ -69,6 +76,7 @@ public class InstallService
         }
 
         LogService.Log($"Resolved URL  : {archiveUrl}");
+        LastResolvedArchiveUrl = archiveUrl;
 
         // Determine file extension for extraction method
         var extension = Path.GetExtension(new Uri(archiveUrl).AbsolutePath).ToLowerInvariant();

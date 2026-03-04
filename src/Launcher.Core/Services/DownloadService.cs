@@ -24,7 +24,20 @@ public class DownloadProgress
 /// </summary>
 public class DownloadService
 {
-    private static readonly HttpClient HttpClient = new()
+    private static readonly HttpClient HttpClient = new(
+        new SocketsHttpHandler
+        {
+            AllowAutoRedirect = true,
+            MaxAutomaticRedirections = 10,
+            // TLS: accept any certificate AND allow TLS 1.2 + 1.3 so the negotiation
+            // can fall back when one version's cipher suite fails on a user's system.
+            SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+            {
+                RemoteCertificateValidationCallback = (_, _, _, _) => true,
+                EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                                    | System.Security.Authentication.SslProtocols.Tls13,
+            },
+        })
     {
         Timeout = TimeSpan.FromMinutes(10),
         DefaultRequestHeaders =
@@ -129,11 +142,84 @@ public class DownloadService
             catch (Exception ex)
             {
                 LogService.LogError($"All {MaxRetries} download attempts failed for {url}", ex);
-                return false;
             }
         }
 
-        return false;
+        // .NET HttpClient failed — fall back to Windows BITS which uses WinHTTP
+        // (a completely separate TLS stack that handles cipher/cert issues differently).
+        progress?.Report(new DownloadProgress { StatusText = "Trying system downloader (BITS)..." });
+        return await TryBitsDownloadAsync(url, destPath, progress, ct);
+    }
+
+    /// <summary>
+    /// Last-resort download via Windows Background Intelligent Transfer Service.
+    /// Uses WinHTTP instead of .NET Schannel — resolves TLS cipher incompatibilities
+    /// that cause "The decryption operation failed" on certain networks/configurations.
+    /// </summary>
+    private static async Task<bool> TryBitsDownloadAsync(
+        string url, string destPath,
+        IProgress<DownloadProgress>? progress, CancellationToken ct)
+    {
+        try
+        {
+            LogService.Log($"BITS fallback: {url}");
+            try { if (File.Exists(destPath)) File.Delete(destPath); } catch { }
+
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = "powershell.exe",
+                Arguments       = $"-NonInteractive -WindowStyle Hidden -Command " +
+                                  $"\"Start-BitsTransfer -Source '{url}' -Destination '{destPath}'\"",
+                UseShellExecute = false,
+                CreateNoWindow  = true,
+                RedirectStandardError = true,
+            };
+
+            using var proc = new System.Diagnostics.Process { StartInfo = psi };
+            proc.Start();
+
+            // Poll growing file size for a live progress display while BITS downloads
+            var done = false;
+            _ = Task.Run(async () =>
+            {
+                while (!done)
+                {
+                    await Task.Delay(500).ConfigureAwait(false);
+                    if (progress == null || !File.Exists(destPath)) continue;
+                    try
+                    {
+                        var received = new FileInfo(destPath).Length;
+                        progress.Report(new DownloadProgress
+                        {
+                            BytesReceived = received,
+                            StatusText    = $"Downloading (system)... {FormatBytes(received)}",
+                        });
+                    }
+                    catch { }
+                }
+            }, CancellationToken.None);
+
+            try   { await proc.WaitForExitAsync(ct); }
+            catch (OperationCanceledException) { done = true; try { proc.Kill(); } catch { } throw; }
+            done = true;
+
+            if (proc.ExitCode != 0)
+            {
+                var stderr = await proc.StandardError.ReadToEndAsync();
+                LogService.LogError($"BITS fallback failed (exit {proc.ExitCode}): {stderr}");
+                return false;
+            }
+
+            var ok = File.Exists(destPath) && new FileInfo(destPath).Length > 0;
+            if (ok) LogService.Log($"BITS download complete → {destPath}");
+            return ok;
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            LogService.LogError("BITS fallback failed", ex);
+            return false;
+        }
     }
 
     /// <summary>

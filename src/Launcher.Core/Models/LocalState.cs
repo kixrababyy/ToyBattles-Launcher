@@ -31,6 +31,19 @@ public class LocalState
     /// </summary>
     public DateTime? PendingSessionStartUtc { get; set; } = null;
 
+    /// <summary>
+    /// Launcher version the user chose to permanently skip (e.g. "1.0.3").
+    /// If the remote version matches this, the update prompt is suppressed.
+    /// </summary>
+    public string? SkippedLauncherVersion { get; set; } = null;
+
+    /// <summary>
+    /// Launcher version we started downloading and swapping to.
+    /// If we launch again with the same old version and this is set to the same remote,
+    /// the bat swap failed — show a manual download message instead of looping.
+    /// </summary>
+    public string? LastAttemptedUpdateVersion { get; set; } = null;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true

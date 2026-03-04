@@ -275,9 +275,16 @@ public class HomeViewModel : ViewModelBase
 
     /// <summary>
     /// Fired when a newer version of the launcher is available on GitHub.
-    /// The handler should show a prompt and return true if the user wants to update.
+    /// Returns: true = update now, false = skip this version permanently, null = remind me later.
     /// </summary>
-    public event Func<Version, bool>? LauncherUpdateAvailable;
+    public event Func<Version, bool?>? LauncherUpdateAvailable;
+
+    /// <summary>
+    /// Fired when a previous auto-update swap failed (bat ran but exe was not replaced).
+    /// The handler should show a message pointing the user to the manual download URL.
+    /// Returns true if the user wants to open the download page, false to skip the version.
+    /// </summary>
+    public event Func<Version, bool>? LauncherUpdateSwapFailed;
 
     public HomeViewModel()
     {
@@ -645,32 +652,108 @@ public class HomeViewModel : ViewModelBase
     /// <summary>
     /// Checks GitHub Releases for a newer Launcher.exe. If found and the user agrees,
     /// downloads and applies the update, then restarts the launcher.
+    ///
+    /// Loop-prevention:
+    ///  - If the user previously skipped this version → silently return.
+    ///  - If we already attempted to swap to this version but the bat failed (exe is still old) →
+    ///    show a "download manually" prompt instead of re-downloading forever.
+    ///  - If the user picks "Skip This Version" → saves to state so it's never asked again.
+    ///  - If the user picks "Later" → skips for this session only.
     /// </summary>
     private async Task CheckLauncherUpdateAsync()
     {
         var (needsUpdate, remoteVersion) = await LauncherUpdateService.CheckAsync();
-        if (!needsUpdate || remoteVersion == null || LauncherUpdateAvailable == null)
+        if (!needsUpdate || remoteVersion == null)
             return;
 
-        // Ask user on the UI thread (MessageBox must run on UI thread)
-        bool shouldUpdate = await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+        var remoteStr = remoteVersion.ToString(3); // "1.0.3"
+
+        // User permanently skipped this version — never show again
+        if (_localState.SkippedLauncherVersion == remoteStr)
+        {
+            LogService.Log($"Launcher update v{remoteStr} was skipped by user.");
+            return;
+        }
+
+        // Swap-failure detection: we tried to update to this version last time but
+        // the bat didn't replace the exe — avoid re-downloading forever
+        if (_localState.LastAttemptedUpdateVersion == remoteStr && LauncherUpdateSwapFailed != null)
+        {
+            LogService.Log($"Swap to v{remoteStr} was attempted previously but failed — prompting for manual download.");
+            bool openPage = await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+                () => LauncherUpdateSwapFailed.Invoke(remoteVersion));
+
+            if (openPage)
+            {
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(LauncherUpdateService.ReleasesUrl) { UseShellExecute = true }); }
+                catch { }
+            }
+            else
+            {
+                // User dismissed the manual-download prompt → skip this version
+                _localState.SkippedLauncherVersion = remoteStr;
+                _localState.Save();
+            }
+            return;
+        }
+
+        if (LauncherUpdateAvailable == null) return;
+
+        // Ask user: Update Now (true) / Skip This Version (false) / Later (null)
+        bool? decision = await System.Windows.Application.Current.Dispatcher.InvokeAsync(
             () => LauncherUpdateAvailable.Invoke(remoteVersion));
 
-        if (!shouldUpdate) return;
+        if (decision == false)
+        {
+            // Skip this version permanently
+            _localState.SkippedLauncherVersion = remoteStr;
+            _localState.Save();
+            LogService.Log($"User skipped launcher update v{remoteStr} permanently.");
+            return;
+        }
 
+        if (decision == null)
+        {
+            LogService.Log($"User deferred launcher update v{remoteStr} until next launch.");
+            return;
+        }
+
+        // decision == true — proceed with download
+        var stateBeforeUpdate = State;
         try
         {
+            // Record the attempt so we can detect a failed bat swap on next launch
+            _localState.LastAttemptedUpdateVersion = remoteStr;
+            _localState.Save();
+
+            // Show progress bar + cancel button (same as a game download)
+            State = LauncherState.Downloading;
             StatusText = "Downloading launcher update...";
-            var progress = new Progress<DownloadProgress>(p => StatusText = p.StatusText);
-            await LauncherUpdateService.DownloadAndApplyAsync(progress);
+            _cts = new CancellationTokenSource();
+            var progress = new Progress<DownloadProgress>(p =>
+            {
+                StatusText = p.StatusText;
+                ProgressPercent = p.ProgressPercent;
+            });
+            await LauncherUpdateService.DownloadAndApplyAsync(progress, _cts.Token);
             // Swap script is now running — shut down so the bat can replace the exe
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(
                 () => System.Windows.Application.Current.Shutdown());
         }
+        catch (OperationCanceledException)
+        {
+            State = stateBeforeUpdate;
+            ProgressPercent = 0;
+            StatusText = "Launcher update cancelled.";
+            _cts = null;
+        }
         catch (Exception ex)
         {
             LogService.LogError("Launcher self-update failed", ex);
+            State = stateBeforeUpdate;
+            ProgressPercent = 0;
             StatusText = "Launcher update failed. Will try again next launch.";
+            _cts = null;
         }
     }
 
@@ -829,6 +912,12 @@ public class HomeViewModel : ViewModelBase
     public event Func<string?>? OnInstallFolderRequested;
 
     /// <summary>
+    /// Fired when all automatic download methods fail (both .NET HttpClient and BITS).
+    /// Passes the resolved archive URL so the caller can show a manual-download dialog.
+    /// </summary>
+    public event Action<string>? ManualDownloadRequired;
+
+    /// <summary>
     /// Full game installation flow — downloads the complete game from the CDN.
     /// </summary>
     private async Task InstallFullGameAsync()
@@ -960,7 +1049,9 @@ public class HomeViewModel : ViewModelBase
             else
             {
                 State = LauncherState.Error;
-                StatusText = "Installation failed. Check logs for details.";
+                var failedUrl = _installService.LastResolvedArchiveUrl ?? fullFileAddr;
+                StatusText = "Download failed — your PC could not connect to the server. Try downloading manually.";
+                ManualDownloadRequired?.Invoke(failedUrl);
             }
         }
         catch (OperationCanceledException)

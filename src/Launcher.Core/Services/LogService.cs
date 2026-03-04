@@ -32,8 +32,22 @@ public class LogService
 
     public static void LogError(string message, Exception? ex = null)
     {
-        var msg = ex != null ? $"{message}: {ex.Message}" : message;
-        Write($"[ERROR] {msg}");
+        if (ex == null)
+        {
+            Write($"[ERROR] {message}");
+            return;
+        }
+
+        // Build a chain of all inner exception messages so nothing is hidden
+        var parts = new System.Collections.Generic.List<string>();
+        var current = ex;
+        while (current != null)
+        {
+            parts.Add(current.Message);
+            current = current.InnerException;
+        }
+        var chain = string.Join(" → ", parts);
+        Write($"[ERROR] {message}: {chain}");
     }
 
     /// <summary>

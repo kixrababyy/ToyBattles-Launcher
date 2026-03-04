@@ -13,7 +13,8 @@ public static class LauncherUpdateService
     private const string GitHubRepo  = "ToyBattles-Launcher";
 
     private static string ApiUrl      => $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
-    private static string DownloadUrl => $"https://github.com/{GitHubOwner}/{GitHubRepo}/releases/latest/download/Launcher.exe";
+    public  static string DownloadUrl => $"https://github.com/{GitHubOwner}/{GitHubRepo}/releases/latest/download/Launcher.exe";
+    public  static string ReleasesUrl => $"https://github.com/{GitHubOwner}/{GitHubRepo}/releases/latest";
 
     /// <summary>
     /// Fetches the latest GitHub Release tag and compares it to the running assembly version.
@@ -73,12 +74,24 @@ public static class LauncherUpdateService
         if (!ok)
             throw new Exception("Failed to download launcher update after multiple retries.");
 
-        // Write swap bat — waits 2 s for the current process to fully exit,
+        // Write swap bat — waits for the Launcher process to fully exit (retry loop),
         // moves the new exe over the old one, relaunches, then self-deletes.
+        var exeName = Path.GetFileNameWithoutExtension(currentExe); // e.g. "Launcher"
         var bat = $"""
             @echo off
-            timeout /t 2 /nobreak > nul
-            move /y "{tempExe}" "{currentExe}"
+            :wait
+            tasklist /fi "imagename eq {exeName}.exe" 2>nul | find /i "{exeName}.exe" >nul
+            if not errorlevel 1 (
+                timeout /t 1 /nobreak > nul
+                goto wait
+            )
+            timeout /t 1 /nobreak > nul
+            :retry
+            move /y "{tempExe}" "{currentExe}" >nul 2>&1
+            if errorlevel 1 (
+                timeout /t 2 /nobreak > nul
+                goto retry
+            )
             start "" "{currentExe}"
             del "%~f0"
             """;

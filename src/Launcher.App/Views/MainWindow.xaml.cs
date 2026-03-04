@@ -58,15 +58,64 @@ public partial class MainWindow : Window
         };
 
         // Prompt user when a newer launcher version is available on GitHub
+        // Returns: true = update now, false = skip this version, null = remind me later
         _viewModel.HomeVM.LauncherUpdateAvailable += version =>
         {
             var result = MessageBox.Show(
-                $"A new version of ToyBattles Launcher (v{version}) is available.\n\n" +
-                "The launcher will restart automatically after downloading.\n\n" +
-                "Update now?",
+                $"ToyBattles Launcher v{version.ToString(3)} is available.\n\n" +
+                "• Click YES to download and install it now (launcher will restart).\n" +
+                "• Click NO to skip this version and never be asked again.\n" +
+                "• Click CANCEL to be reminded next time you open the launcher.",
                 "Launcher Update Available",
-                MessageBoxButton.YesNo,
+                MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Information);
+
+            return result switch
+            {
+                MessageBoxResult.Yes    => true,   // update now
+                MessageBoxResult.No     => false,  // skip permanently
+                _                       => null,   // cancel / remind later
+            };
+        };
+
+        // Fired when ALL download methods fail (HttpClient + BITS) — guide user to manual download
+        _viewModel.HomeVM.ManualDownloadRequired += url =>
+        {
+            var result = MessageBox.Show(
+                "The game could not be downloaded automatically.\n\n" +
+                "This can happen if antivirus, a firewall, or a Windows security setting is " +
+                "blocking the connection.\n\n" +
+                "Click YES to open the download link in your browser so you can install manually.\n" +
+                "Click NO to dismiss.",
+                "Download Failed — Manual Download Required",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName        = url,
+                        UseShellExecute = true
+                    });
+                }
+                catch { /* ignore — browser may not be available */ }
+            }
+        };
+
+        // Fired when a previous auto-update bat swap failed — steer user to manual download
+        _viewModel.HomeVM.LauncherUpdateSwapFailed += version =>
+        {
+            var result = MessageBox.Show(
+                $"The automatic update to v{version.ToString(3)} could not be applied.\n\n" +
+                "This can happen if antivirus or Windows blocked the file swap.\n\n" +
+                "Click YES to open the download page so you can replace the launcher manually.\n" +
+                "Click NO to dismiss this message (you won't be asked again).",
+                "Launcher Auto-Update Failed",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
             return result == MessageBoxResult.Yes;
         };
 
