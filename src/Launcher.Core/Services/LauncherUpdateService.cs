@@ -41,8 +41,20 @@ public static class LauncherUpdateService
             if (current == null || !Version.TryParse(tag, out var remote))
                 return (false, null);
 
-            LogService.Log($"Launcher version check — current: {current}, remote: {remote}");
-            return (remote > current, remote);
+            // Ignore dev/debug builds explicitly set to 1.0.0.0 or 0.0.0.0
+            if (current.Major == 1 && current.Minor == 0 && current.Build == 0 && current.Revision <= 0 ||
+                current.Major == 0 && current.Minor == 0 && current.Build == 0 && current.Revision <= 0)
+            {
+                LogService.Log("Launcher version check skipped — running a dev/debug build.");
+                return (false, null);
+            }
+
+            // Normalize missing revision numbers (e.g. 1.0.7 parsed as 1.0.7.-1)
+            var normalizedRemote = new Version(remote.Major, remote.Minor, Math.Max(0, remote.Build), Math.Max(0, remote.Revision));
+            var normalizedCurrent = new Version(current.Major, current.Minor, Math.Max(0, current.Build), Math.Max(0, current.Revision));
+
+            LogService.Log($"Launcher version check — current: {normalizedCurrent}, remote: {normalizedRemote}");
+            return (normalizedRemote > normalizedCurrent, remote);
         }
         catch (Exception ex)
         {

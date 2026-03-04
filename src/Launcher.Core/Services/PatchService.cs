@@ -293,6 +293,9 @@ public class PatchService
             var backupPath = targetPath + ".bak";
             try
             {
+                if (File.Exists(backupPath))
+                    File.Delete(backupPath); // Ensure no orphaned backups crash the File.Move
+
                 if (File.Exists(targetPath))
                     File.Move(targetPath, backupPath, overwrite: true);
 

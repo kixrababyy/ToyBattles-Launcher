@@ -80,6 +80,16 @@ public class DownloadService
                     LogService.LogWarning($"Retry {attempt}/{MaxRetries}: {url}");
 
                 using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    LogService.LogError(
+                        $"Download failed immediately — HTTP {(int)response.StatusCode} {response.ReasonPhrase} for {url}", null!);
+                    // Do not retry predictable permanent errors (like missing GitHub assets)
+                    return false;
+                }
+
                 response.EnsureSuccessStatusCode();
 
                 var totalBytes = response.Content.Headers.ContentLength ?? -1;

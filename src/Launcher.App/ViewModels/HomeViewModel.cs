@@ -438,6 +438,9 @@ public class HomeViewModel : ViewModelBase
 
     private async Task CheckForUpdatesAsync()
     {
+        if (State == LauncherState.Checking)
+            return;
+
         State = LauncherState.Checking;
         StatusText = "Checking for updates...";
         ProgressPercent = 0;

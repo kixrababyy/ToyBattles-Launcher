@@ -26,16 +26,30 @@ public partial class App : Application
 
             if (needsUpdate && remoteVersion != null)
             {
-                var label = $"v{remoteVersion.Major}.{remoteVersion.Minor}.{remoteVersion.Build}";
-                splash.SetStatus($"Downloading launcher update {label}...");
+                // Prevent infinite restart loops if the downloaded exe doesn't bump its AssemblyVersion
+                var localState = Launcher.Core.Models.LocalState.Load();
+                var remoteStr = remoteVersion.ToString(3);
+                
+                if (localState.LastAttemptedUpdateVersion == remoteStr)
+                {
+                    LogService.Log($"Launcher already attempted to update to {remoteStr} but failed. Skipping auto-update to prevent boot loop.");
+                }
+                else
+                {
+                    var label = $"v{remoteVersion.Major}.{remoteVersion.Minor}.{remoteVersion.Build}";
+                    splash.SetStatus($"Downloading launcher update {label}...");
 
-                var progress = new Progress<DownloadProgress>(p => splash.SetDownloadProgress(p));
+                    var progress = new Progress<DownloadProgress>(p => splash.SetDownloadProgress(p));
 
-                await LauncherUpdateService.DownloadAndApplyAsync(progress);
+                    localState.LastAttemptedUpdateVersion = remoteStr;
+                    localState.Save();
 
-                splash.SetStatus("Restarting...");
-                await Task.Delay(600);
-                applyUpdate = true;
+                    await LauncherUpdateService.DownloadAndApplyAsync(progress);
+
+                    splash.SetStatus("Restarting...");
+                    await Task.Delay(600);
+                    applyUpdate = true;
+                }
             }
         }
         catch (Exception ex)
