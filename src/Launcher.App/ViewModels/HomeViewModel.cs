@@ -368,9 +368,6 @@ public class HomeViewModel : ViewModelBase
         _ = DoPingServerStatusAsync();
 
         await CheckForUpdatesAsync();
-
-        // Verify cgd.dip against remote (Adler32) in background after update check
-        _ = CheckCgdDipAsync();
     }
 
     /// <summary>
@@ -434,6 +431,10 @@ public class HomeViewModel : ViewModelBase
         {
             _updateInfoConfig = UpdateInfoConfig.Load(updateInfoPath);
         }
+
+        // Must re-apply the server profile, otherwise a local updateinfo.ini
+        // (which usually points to the EU server) will overwrite our selected server UI setting.
+        ApplyServerProfile();
     }
 
     private async Task CheckForUpdatesAsync()
@@ -512,6 +513,10 @@ public class HomeViewModel : ViewModelBase
             {
                 IsVersionUpToDate = true;
                 LogService.Log($"Version {installedVersion} is up to date.");
+                
+                StatusText = "Verifying configuration...";
+                await CheckCgdDipAsync();
+
                 State = LauncherState.Ready;
                 StatusText = "Game is up to date!";
                 PatchNotes = $"🎮 ToyBattles\n\n" +
@@ -1037,11 +1042,6 @@ public class HomeViewModel : ViewModelBase
                 // Load the version from the freshly installed files
                 LoadLocalVersion();
 
-                // Sync cgd.dip from CDN — the ZIP may contain a stale copy.
-                // This normally runs on launcher startup; doing it here ensures the game
-                // can connect on the very first launch without requiring a restart.
-                await CheckCgdDipAsync();
-
                 StatusText = $"Installed to: {gameRoot}. Checking for updates...";
                 ProgressPercent = 100;
                 DownloadSpeed = string.Empty;
@@ -1100,7 +1100,6 @@ public class HomeViewModel : ViewModelBase
         }
 
         LoadLocalVersion();
-        ApplyServerProfile(); // restore correct UpdateAddress after LoadLocalVersion may override it
         InstalledVersionText = _localState.InstalledVersion is { } v ? $"Installed: {v}" : string.Empty;
         State = LauncherState.Checking;
         StatusText = "Checking for updates...";

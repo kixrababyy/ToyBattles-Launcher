@@ -28,13 +28,14 @@ public class RepairViewModel : ViewModelBase
     /// </summary>
     private static string GetUpdateAddress(UpdateInfoConfig? updateInfo, LocalState state)
     {
+        var profile = state.ServerProfile ?? "Main Build";
+        if (ServerAddresses.TryGetValue(profile, out var addr) && !string.IsNullOrEmpty(addr))
+            return addr;
+
         if (!string.IsNullOrEmpty(updateInfo?.UpdateAddress))
             return updateInfo.UpdateAddress;
 
-        var profile = state.ServerProfile ?? "Main Build";
-        return ServerAddresses.TryGetValue(profile, out var addr)
-            ? addr
-            : "http://cdn.toybattles.net/ENG";
+        return "http://cdn.toybattles.net/ENG";
     }
 
     private bool _isRepairing;
