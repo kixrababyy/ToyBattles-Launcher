@@ -70,36 +70,71 @@ public class DownloadService
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
+        var tmpPath = destPath + ".tmp";
+
         for (int attempt = 1; attempt <= MaxRetries; attempt++)
         {
             try
             {
+                ct.ThrowIfCancellationRequested();
+
+                long existingSize = 0;
+                if (File.Exists(tmpPath))
+                    existingSize = new FileInfo(tmpPath).Length;
+
                 if (attempt == 1)
-                    LogService.Log($"Downloading: {url}");
+                    LogService.Log($"Downloading: {url}{(existingSize > 0 ? $" (Resuming from {FormatBytes(existingSize)})" : "")}");
                 else
                     LogService.LogWarning($"Retry {attempt}/{MaxRetries}: {url}");
 
-                using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                if (existingSize > 0)
+                    request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(existingSize, null);
+
+                using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound ||
                     response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
                     LogService.LogError(
                         $"Download failed immediately — HTTP {(int)response.StatusCode} {response.ReasonPhrase} for {url}", null!);
-                    // Do not retry predictable permanent errors (like missing GitHub assets)
+                    // Do not retry predictable permanent errors
                     return false;
+                }
+                
+                // If we get 416 Range Not Satisfiable, our tmp file is likely larger than the remote file or invalid. Delete and retry.
+                if (response.StatusCode == System.Net.HttpStatusCode.RequestedRangeNotSatisfiable)
+                {
+                    LogService.LogWarning("Server refused range request. Restarting download from scratch.");
+                    File.Delete(tmpPath);
+                    existingSize = 0;
+                    continue; // Loop again, next time it won't send the range header
                 }
 
                 response.EnsureSuccessStatusCode();
 
-                var totalBytes = response.Content.Headers.ContentLength ?? -1;
-                LogService.Log($"File size: {(totalBytes >= 0 ? FormatBytes(totalBytes) : "unknown")}");
+                // 206 Partial Content means the server honored our range request
+                var isPartial = response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+                if (!isPartial && existingSize > 0)
+                {
+                    // Server ignored the range request and is sending the full file. We must wipe the tmp file.
+                    LogService.LogWarning("Server ignored range request (returned 200 instead of 206). Restarting download from scratch.");
+                    File.Delete(tmpPath);
+                    existingSize = 0;
+                }
+
+                var contentLength = response.Content.Headers.ContentLength ?? -1;
+                var totalBytes = contentLength >= 0 ? existingSize + contentLength : -1;
+
+                if (attempt == 1 || isPartial)
+                    LogService.Log($"File size: {(totalBytes >= 0 ? FormatBytes(totalBytes) : "unknown")}");
 
                 await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
-                await using var fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, true);
+                var fileMode = isPartial && existingSize > 0 ? FileMode.Append : FileMode.Create;
+                await using var fileStream = new FileStream(tmpPath, fileMode, FileAccess.Write, FileShare.None, BufferSize, true);
 
                 var buffer = new byte[BufferSize];
-                long totalRead = 0;
+                long totalRead = existingSize;
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 int bytesRead;
 
@@ -111,7 +146,7 @@ public class DownloadService
                     // Throttle if a speed cap is configured
                     if (MaxBytesPerSecond > 0)
                     {
-                        var expectedMs = (long)(totalRead * 1000.0 / MaxBytesPerSecond);
+                        var expectedMs = (long)((totalRead - existingSize) * 1000.0 / MaxBytesPerSecond);
                         var delayMs = (int)(expectedMs - (long)sw.Elapsed.TotalMilliseconds);
                         if (delayMs > 0)
                             await Task.Delay(delayMs, ct);
@@ -120,7 +155,7 @@ public class DownloadService
                     if (progress != null)
                     {
                         var elapsed = sw.Elapsed;
-                        var speed = elapsed.TotalSeconds > 0 ? totalRead / elapsed.TotalSeconds : 0;
+                        var speed = elapsed.TotalSeconds > 0 ? (totalRead - existingSize) / elapsed.TotalSeconds : 0;
                         var remaining = speed > 0 && totalBytes > 0
                             ? TimeSpan.FromSeconds((totalBytes - totalRead) / speed)
                             : TimeSpan.Zero;
@@ -135,6 +170,9 @@ public class DownloadService
                         });
                     }
                 }
+
+                // Download completed fully. Atomic rename.
+                File.Move(tmpPath, destPath, overwrite: true);
 
                 LogService.Log($"Download complete → {destPath}");
                 return true;

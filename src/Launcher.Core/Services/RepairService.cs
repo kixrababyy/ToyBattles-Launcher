@@ -59,10 +59,25 @@ public class RepairService
 
             try
             {
-                // Check if local file exists
-                if (!File.Exists(localPath))
+                var localSize = File.Exists(localPath) ? new FileInfo(localPath).Length : 0;
+                long remoteSize = -1;
+
+                // Send HEAD request to get accurate remote size
+                try
                 {
-                    LogService.Log($"{relativePath} is missing, downloading...");
+                    using var request = new HttpRequestMessage(HttpMethod.Head, remoteUrl);
+                    using var response = await new HttpClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+                    if (response.IsSuccessStatusCode)
+                        remoteSize = response.Content.Headers.ContentLength ?? -1;
+                }
+                catch { }
+
+                LogService.Log($"{relativePath} - Local size: {localSize} bytes, Remote size: {remoteSize} bytes");
+
+                // Check if local file is missing, or if remote size is known and they don't match
+                if (!File.Exists(localPath) || (remoteSize > 0 && localSize != remoteSize))
+                {
+                    LogService.Log($"{relativePath} is missing or differing in size, downloading...");
                     var success = await _downloadService.DownloadFileAsync(remoteUrl, localPath, ct: ct);
                     if (success)
                     {
@@ -74,16 +89,11 @@ public class RepairService
                         result.FailedFiles++;
                         LogService.LogError($"Failed to repair {relativePath}");
                     }
-                    continue;
                 }
-
-                // Verify file size by checking remote HEAD
-                var localSize = new FileInfo(localPath).Length;
-                LogService.Log($"{relativePath} - Local size: {localSize} bytes");
-
-                // File exists and we can't easily get remote size without HEAD request
-                // Mark as OK for now — full verification would require manifest
-                LogService.Log($"{relativePath} exists, size {localSize} bytes - OK");
+                else
+                {
+                    LogService.Log($"{relativePath} verified OK.");
+                }
             }
             catch (Exception ex)
             {
