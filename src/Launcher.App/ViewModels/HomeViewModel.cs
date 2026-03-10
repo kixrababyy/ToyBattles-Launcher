@@ -219,8 +219,6 @@ public class HomeViewModel : ViewModelBase
             else
             {
                 LoadLocalVersion();
-                State = LauncherState.Checking;
-                StatusText = "Checking for updates...";
                 _ = CheckForUpdatesAsync();
             }
         }
@@ -439,9 +437,6 @@ public class HomeViewModel : ViewModelBase
 
     private async Task CheckForUpdatesAsync()
     {
-        if (State == LauncherState.Checking)
-            return;
-
         State = LauncherState.Checking;
         StatusText = "Checking for updates...";
         ProgressPercent = 0;
@@ -1031,7 +1026,16 @@ public class HomeViewModel : ViewModelBase
                     if (File.Exists(srcUpdateInfo))
                     {
                         var destUpdateInfo = Path.Combine(gameRoot, "updateinfo.ini");
-                        File.Copy(srcUpdateInfo, destUpdateInfo, overwrite: true);
+
+                        // Ensure we don't try to copy the file onto itself if the user
+                        // installed the game in the exact same folder as the launcher.
+                        if (!string.Equals(
+                                Path.GetFullPath(srcUpdateInfo),
+                                Path.GetFullPath(destUpdateInfo),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.Copy(srcUpdateInfo, destUpdateInfo, overwrite: true);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -1101,8 +1105,6 @@ public class HomeViewModel : ViewModelBase
 
         LoadLocalVersion();
         InstalledVersionText = _localState.InstalledVersion is { } v ? $"Installed: {v}" : string.Empty;
-        State = LauncherState.Checking;
-        StatusText = "Checking for updates...";
         _ = CheckForUpdatesAsync();
     }
 
