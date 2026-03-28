@@ -279,7 +279,16 @@ public class DownloadService
         {
             try
             {
-                return await HttpClient.GetStringAsync(url, ct);
+                using var response = await HttpClient.GetAsync(url, ct);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    LogService.Log($"Download string skipped — HTTP {(int)response.StatusCode} for {url}");
+                    return null; // Don't retry permanent errors
+                }
+                
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadAsStringAsync(ct);
             }
             catch (OperationCanceledException)
             {

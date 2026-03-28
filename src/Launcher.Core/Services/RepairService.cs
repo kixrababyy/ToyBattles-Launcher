@@ -62,10 +62,10 @@ public class RepairService
                 var localSize = File.Exists(localPath) ? new FileInfo(localPath).Length : 0;
                 long remoteSize = -1;
 
-                // Send HEAD request to get accurate remote size
+                // Send GET request to get accurate remote size (handles redirects better)
                 try
                 {
-                    using var request = new HttpRequestMessage(HttpMethod.Head, remoteUrl);
+                    using var request = new HttpRequestMessage(HttpMethod.Get, remoteUrl);
                     using var response = await new HttpClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
                     if (response.IsSuccessStatusCode)
                         remoteSize = response.Content.Headers.ContentLength ?? -1;

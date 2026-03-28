@@ -145,12 +145,11 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _isSettingsOpen, value);
     }
 
-    public static string[] ServerOptions { get; } = ["Main Build", "SEA Server", "Test Server"];
+    public static string[] ServerOptions { get; } = ["Main Build", "Test Server"];
 
     private static readonly Dictionary<string, string> ServerAddresses = new()
     {
         ["Main Build"] = "http://cdn.toybattles.net/ENG",
-        ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
         ["Test Server"] = "http://127.0.0.1",
     };
 
@@ -182,18 +181,7 @@ public class HomeViewModel : ViewModelBase
             // Remember the game root for the server we're leaving
             _localState.ServerGameRoots[previous] = _localState.GameRootPath;
 
-            // First time switching to SEA (no stored SEA install) — warn about separate download
-            _localState.ServerGameRoots.TryGetValue("SEA Server", out var existingSeaRoot);
-            if (value == "SEA Server" && string.IsNullOrEmpty(existingSeaRoot))
-            {
-                var confirmed = ConfirmRedownloadRequested?.Invoke() ?? false;
-                if (!confirmed)
-                {
-                    _selectedServer = previous;
-                    OnPropertyChanged();
-                    return;
-                }
-            }
+
 
             // Restore game root for the server we're switching to
             _localState.ServerGameRoots.TryGetValue(value, out var restoredRoot);
@@ -212,9 +200,7 @@ public class HomeViewModel : ViewModelBase
             if (string.IsNullOrEmpty(_localState.GameRootPath))
             {
                 State = LauncherState.NeedGameRoot;
-                StatusText = value == "SEA Server"
-                    ? "SEA server selected. Click INSTALL to download the SEA game files."
-                    : "Game not installed. Click INSTALL to download and set up the game.";
+                StatusText = "Game not installed. Click INSTALL to download and set up the game.";
             }
             else
             {
@@ -265,11 +251,7 @@ public class HomeViewModel : ViewModelBase
     /// <summary>Fired when a tray balloon notification should be shown.</summary>
     public event Action<string, string>? ShowBalloonRequested;
 
-    /// <summary>
-    /// Fired when switching to a server that requires a full re-download.
-    /// The handler should show a confirmation dialog and return true to proceed.
-    /// </summary>
-    public event Func<bool>? ConfirmRedownloadRequested;
+
 
     /// <summary>
     /// Fired when a newer version of the launcher is available on GitHub.
@@ -774,12 +756,6 @@ public class HomeViewModel : ViewModelBase
         if (string.IsNullOrEmpty(_localState.GameRootPath)) return;
 
         var cgdLocalPath = Path.Combine(_localState.GameRootPath, "data", "cgd.dip");
-        if (!File.Exists(cgdLocalPath))
-        {
-            LogService.Log("cgd.dip not found locally, skipping check.");
-            return;
-        }
-
         var serverAddr = GetServerAddress();
         var cgdUrl = $"{serverAddr}/microvolts/Full/data/cgd.dip";
 
@@ -794,21 +770,33 @@ public class HomeViewModel : ViewModelBase
                 return;
             }
 
-            var localData = await File.ReadAllBytesAsync(cgdLocalPath);
-            var localChecksum = PatchService.Adler32(localData);
-            var remoteChecksum = PatchService.Adler32(remoteData);
-
-            LogService.Log($"cgd.dip — local: {localData.Length} bytes ({localChecksum:x8}), remote: {remoteData.Length} bytes ({remoteChecksum:x8})");
-
-            if (localChecksum != remoteChecksum)
+            bool needsUpdate = true;
+            if (File.Exists(cgdLocalPath))
             {
-                LogService.Log("cgd.dip checksum mismatch — updating...");
+                var localData = await File.ReadAllBytesAsync(cgdLocalPath);
+                var localChecksum = PatchService.Adler32(localData);
+                var remoteChecksum = PatchService.Adler32(remoteData);
+
+                LogService.Log($"cgd.dip — local: {localData.Length} bytes ({localChecksum:x8}), remote: {remoteData.Length} bytes ({remoteChecksum:x8})");
+
+                needsUpdate = localChecksum != remoteChecksum;
+            }
+            else
+            {
+                LogService.Log("cgd.dip not found locally. Downloading...");
+                var dir = Path.GetDirectoryName(cgdLocalPath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            }
+
+            if (needsUpdate)
+            {
+                LogService.Log("cgd.dip mismatch or missing — updating...");
                 await File.WriteAllBytesAsync(cgdLocalPath, remoteData);
                 LogService.Log("cgd.dip updated successfully.");
             }
             else
             {
-                LogService.Log("cgd.dip checksums match, no update needed.");
+                LogService.Log("cgd.dip checksum matches, no update needed.");
             }
         }
         catch (Exception ex)

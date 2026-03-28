@@ -161,6 +161,7 @@ public class PatchService
             }
 
             // 2. Download the .xml for Adler32 checksum verification (optional — server may not have it)
+            progress?.Report(new DownloadProgress { StatusText = "Fetching verification data...", ProgressPercent = 100 });
             Dictionary<string, string> checksums = new();
             var xmlContent = await _downloadService.DownloadStringAsync(xmlUrl, ct);
             if (xmlContent != null)

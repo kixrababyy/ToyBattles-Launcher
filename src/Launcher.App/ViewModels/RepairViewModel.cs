@@ -18,7 +18,6 @@ public class RepairViewModel : ViewModelBase
     private static readonly Dictionary<string, string> ServerAddresses = new()
     {
         ["Main Build"] = "http://cdn.toybattles.net/ENG",
-        ["SEA Server"] = "https://toybattles-sea.b-cdn.net/ENG",
         ["Test Server"] = "http://127.0.0.1",
     };
 

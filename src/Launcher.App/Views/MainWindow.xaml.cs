@@ -44,18 +44,7 @@ public partial class MainWindow : Window
                 _trayIcon?.ShowBalloonTip(title, msg, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
         };
 
-        // Confirm re-download when switching to a server with different game files (e.g. SEA)
-        _viewModel.HomeVM.ConfirmRedownloadRequested += () =>
-        {
-            var result = MessageBox.Show(
-                "The SEA server uses completely different game files.\n\n" +
-                "You will need to download and install the SEA version separately.\n\n" +
-                "Do you want to continue?",
-                "Separate Download Required",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            return result == MessageBoxResult.Yes;
-        };
+
 
         // Prompt user when a newer launcher version is available on GitHub
         // Returns: true = update now, false = skip this version, null = remind me later
