@@ -171,8 +171,13 @@ public class DownloadService
                     }
                 }
 
+                // Explicitly dispose the streams so the file is unlocked before we rename it
+                await fileStream.DisposeAsync();
+                await contentStream.DisposeAsync();
+
                 // Download completed fully. Atomic rename.
-                File.Move(tmpPath, destPath, overwrite: true);
+                if (File.Exists(destPath)) File.Delete(destPath); // Clean move
+                File.Move(tmpPath, destPath);
 
                 LogService.Log($"Download complete → {destPath}");
                 return true;

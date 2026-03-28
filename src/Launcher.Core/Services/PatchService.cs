@@ -139,11 +139,15 @@ public class PatchService
         var xmlUrl = cabUrl.Replace(".cab", ".xml");
 
         var stagingDir = Path.Combine(Path.GetTempPath(), $"LauncherPatch_{Guid.NewGuid()}");
-        Directory.CreateDirectory(stagingDir);
+        var downloadDir = Path.Combine(stagingDir, "download");
+        var extractDir = Path.Combine(stagingDir, "extract");
+
+        Directory.CreateDirectory(downloadDir);
+        Directory.CreateDirectory(extractDir);
 
         try
         {
-            var cabPath = Path.Combine(stagingDir, "patch.cab");
+            var cabPath = Path.Combine(downloadDir, "patch.cab");
 
             // 1. Download the .cab file
             progress?.Report(new DownloadProgress { StatusText = $"Downloading patch {from} → {to}..." });
@@ -176,13 +180,13 @@ public class PatchService
 
             // 3. Extract with expand.exe
             progress?.Report(new DownloadProgress { StatusText = "Extracting patch files..." });
-            var extracted = await ExtractCabAsync(cabPath, stagingDir, ct);
+            var extracted = await ExtractCabAsync(cabPath, extractDir, ct);
             if (!extracted)
                 return false;
 
             // 4. Apply extracted files with checksum verification
             progress?.Report(new DownloadProgress { StatusText = "Applying patch..." });
-            await ApplyPatchFilesAsync(stagingDir, gameRootPath, checksums);
+            await ApplyPatchFilesAsync(extractDir, gameRootPath, checksums);
 
             return true;
         }
