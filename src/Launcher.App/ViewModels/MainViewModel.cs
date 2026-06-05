@@ -44,7 +44,40 @@ public class MainViewModel : ViewModelBase
     public ICommand MinimizeCommand { get; }
 
     public System.Collections.ObjectModel.ObservableCollection<Launcher.Core.Models.CustomClient> CustomClients { get; } = new();
+    private bool _isAddClientOpen;
+    public bool IsAddClientOpen
+    {
+        get => _isAddClientOpen;
+        set => SetProperty(ref _isAddClientOpen, value);
+    }
+
+    private string _newClientName = string.Empty;
+    public string NewClientName
+    {
+        get => _newClientName;
+        set => SetProperty(ref _newClientName, value);
+    }
+
+    private string _newClientPath = string.Empty;
+    public string NewClientPath
+    {
+        get => _newClientPath;
+        set => SetProperty(ref _newClientPath, value);
+    }
+
+    private string _newClientIconPath = string.Empty;
+    public string NewClientIconPath
+    {
+        get => _newClientIconPath;
+        set => SetProperty(ref _newClientIconPath, value);
+    }
+
     public ICommand AddClientCommand { get; }
+    public ICommand CloseAddClientCommand { get; }
+    public ICommand BrowseClientPathCommand { get; }
+    public ICommand BrowseClientIconCommand { get; }
+    public ICommand ConfirmAddClientCommand { get; }
+
     public ICommand SelectClientCommand { get; }
     public ICommand RemoveClientCommand { get; }
 
@@ -64,8 +97,7 @@ public class MainViewModel : ViewModelBase
         NavigateDiscordCommand = new RelayCommand(_ =>
             OpenUrl("https://discord.gg/toybattles"));
 
-        CloseCommand = new RelayCommand(_ =>
-            System.Windows.Application.Current.Shutdown());
+        CloseCommand = new RelayCommand(_ => System.Windows.Application.Current.Shutdown());
         MinimizeCommand = new RelayCommand(_ =>
         {
             var window = System.Windows.Application.Current.MainWindow;
@@ -80,40 +112,65 @@ public class MainViewModel : ViewModelBase
             CustomClients.Add(client);
         }
 
-        AddClientCommand = new RelayCommand(_ => AddCustomClient());
-        SelectClientCommand = new RelayCommand(param => SelectCustomClient(param as CustomClient));
-        RemoveClientCommand = new RelayCommand(param => RemoveCustomClient(param as CustomClient));
-    }
-
-    private void AddCustomClient()
-    {
-        var folderDialog = new Microsoft.Win32.OpenFolderDialog
+        AddClientCommand = new RelayCommand(_ => 
         {
-            Title = "Select Game Client Folder"
-        };
-        
-        if (folderDialog.ShowDialog() == true)
+            NewClientName = string.Empty;
+            NewClientPath = string.Empty;
+            NewClientIconPath = string.Empty;
+            IsAddClientOpen = true;
+        });
+
+        CloseAddClientCommand = new RelayCommand(_ => IsAddClientOpen = false);
+
+        BrowseClientPathCommand = new RelayCommand(_ =>
+        {
+            var folderDialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Select Game Client Folder"
+            };
+            if (folderDialog.ShowDialog() == true)
+            {
+                NewClientPath = folderDialog.FolderName;
+                if (string.IsNullOrWhiteSpace(NewClientName))
+                {
+                    NewClientName = new System.IO.DirectoryInfo(folderDialog.FolderName).Name;
+                }
+            }
+        });
+
+        BrowseClientIconCommand = new RelayCommand(_ =>
         {
             var fileDialog = new Microsoft.Win32.OpenFileDialog
             {
                 Title = "Select Client Icon",
                 Filter = "Image Files (*.png;*.jpg;*.jpeg;*.ico)|*.png;*.jpg;*.jpeg;*.ico|All files (*.*)|*.*"
             };
-
             if (fileDialog.ShowDialog() == true)
             {
-                var newClient = new CustomClient
-                {
-                    Name = new System.IO.DirectoryInfo(folderDialog.FolderName).Name,
-                    Path = folderDialog.FolderName,
-                    IconPath = fileDialog.FileName
-                };
-
-                CustomClients.Add(newClient);
-                SaveClientsToState();
-                SelectCustomClient(newClient);
+                NewClientIconPath = fileDialog.FileName;
             }
-        }
+        });
+
+        ConfirmAddClientCommand = new RelayCommand(_ =>
+        {
+            if (string.IsNullOrWhiteSpace(NewClientName) || string.IsNullOrWhiteSpace(NewClientPath))
+                return;
+
+            var newClient = new CustomClient
+            {
+                Name = NewClientName,
+                Path = NewClientPath,
+                IconPath = string.IsNullOrWhiteSpace(NewClientIconPath) ? null : NewClientIconPath
+            };
+
+            CustomClients.Add(newClient);
+            SaveClientsToState();
+            SelectCustomClient(newClient);
+            IsAddClientOpen = false;
+        });
+
+        SelectClientCommand = new RelayCommand(param => SelectCustomClient(param as CustomClient));
+        RemoveClientCommand = new RelayCommand(param => RemoveCustomClient(param as CustomClient));
     }
 
     private void SelectCustomClient(CustomClient? client)
