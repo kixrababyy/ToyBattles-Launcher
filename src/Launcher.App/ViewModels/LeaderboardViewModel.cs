@@ -14,8 +14,26 @@ public class LeaderboardViewModel : ViewModelBase
     public ObservableCollection<PlayerRank> TopPlayers { get; } = new();
     public ObservableCollection<ClanRank> TopClans { get; } = new();
 
+    private bool _isShowingPlayers = true;
+    public bool IsShowingPlayers
+    {
+        get => _isShowingPlayers;
+        set
+        {
+            if (SetProperty(ref _isShowingPlayers, value))
+            {
+                OnPropertyChanged(nameof(HeaderTitle));
+            }
+        }
+    }
+
+    public string HeaderTitle => IsShowingPlayers ? "Top 10 Players" : "Top 10 Clans";
+
+    public System.Windows.Input.ICommand ToggleViewCommand { get; }
+
     public LeaderboardViewModel()
     {
+        ToggleViewCommand = new RelayCommand(_ => IsShowingPlayers = !IsShowingPlayers);
         _ = LoadDataAsync();
     }
 

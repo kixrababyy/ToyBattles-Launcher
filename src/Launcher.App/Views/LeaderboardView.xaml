@@ -12,37 +12,48 @@
 
     <UserControl.Resources>
         <conv:DdsLevelIconConverter x:Key="DdsLevelIconConverter"/>
+        <!-- Visibility converters -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
-             
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="15"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- Top Players -->
-        <Border Grid.Column="0" Background="#A0080D14" CornerRadius="12" BorderBrush="#2026C0F0" BorderThickness="1" Padding="12,12">
+    <Grid>
+        <!-- Single Column Leaderboard -->
+        <Border Background="#A0080D14" CornerRadius="12" BorderBrush="#2026C0F0" BorderThickness="1" Padding="12,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Top 10 Players" FontSize="16" FontWeight="Black" Foreground="#26C0F0" Margin="0,0,0,10" FontFamily="Segoe UI"/>
                 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <!-- Header with Toggle -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Text="{Binding HeaderTitle}" FontSize="16" FontWeight="Black" Foreground="#26C0F0" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                    
+                    <Button Grid.Column="1" Command="{Binding ToggleViewCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4">
+                        <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#707A8A" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+                
+                <!-- Players List -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" 
+                              Visibility="{Binding IsShowingPlayers, Converter={StaticResource BoolToVis}}">
                     <ItemsControl ItemsSource="{Binding TopPlayers}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,6">
+                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,4">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="25"/>
-                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="26"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
-                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="14" FontWeight="Black" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="12" FontWeight="Black" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#707A8A"/>
@@ -68,7 +79,7 @@
                                         <!-- Level Icon -->
                                         <Image Grid.Column="1" 
                                                Source="{Binding Level, Converter={StaticResource DdsLevelIconConverter}}" 
-                                               Width="20" Height="20" 
+                                               Width="18" Height="18" 
                                                HorizontalAlignment="Left" VerticalAlignment="Center"
                                                RenderOptions.BitmapScalingMode="HighQuality"/>
                                         <!-- Name -->
@@ -79,31 +90,31 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-            </Grid>
-        </Border>
 
-        <!-- Top Clans -->
-        <Border Grid.Column="2" Background="#A0080D14" CornerRadius="12" BorderBrush="#20FF4D7D" BorderThickness="1" Padding="12,12">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Top 10 Clans" FontSize="16" FontWeight="Black" Foreground="#FF4D7D" Margin="0,0,0,10" FontFamily="Segoe UI"/>
-                
+                <!-- Clans List -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsShowingPlayers}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
                     <ItemsControl ItemsSource="{Binding TopClans}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,6">
+                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,4">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="25"/>
-                                            <ColumnDefinition Width="25"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="22"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
-                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="14" FontWeight="Black" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="12" FontWeight="Black" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#707A8A"/>

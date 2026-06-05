@@ -34,7 +34,7 @@
         <!-- ===== LEADERBOARD ===== -->
         <views:LeaderboardView DataContext="{Binding LeaderboardVM}" 
                                HorizontalAlignment="Left" VerticalAlignment="Top" 
-                               Width="550" MaxHeight="350" 
+                               Width="220" MaxHeight="320" 
                                Margin="36,36,0,0"/>
 
         <!-- ===== BANNER IMAGE (positioned at the dark gradient edge) ===== -->
