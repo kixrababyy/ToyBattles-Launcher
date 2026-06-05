@@ -10,7 +10,7 @@
     <AssemblyName>Launcher</AssemblyName>
     <Version>1.0.20</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
 
     <!-- Single-file self-contained publish: just send people Launcher.exe -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

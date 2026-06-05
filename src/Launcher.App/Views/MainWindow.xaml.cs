@@ -385,7 +385,7 @@ public partial class MainWindow : Window
         try
         {
             var iconStream = System.Reflection.Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream("Assets/icon.ico");
+                .GetManifestResourceStream("Assets/logo.ico");
             if (iconStream != null)
             {
                 var decoder = new System.Windows.Media.Imaging.IconBitmapDecoder(
