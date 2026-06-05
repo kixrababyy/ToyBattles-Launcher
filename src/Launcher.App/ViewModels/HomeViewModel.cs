@@ -133,11 +133,25 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _isVersionUpToDate, value);
     }
     
-    private string _activePlayersText = "Connecting...";
-    public string ActivePlayersText
+    private string _europePlayersText = "Connecting...";
+    public string EuropePlayersText
     {
-        get => _activePlayersText;
-        set => SetProperty(ref _activePlayersText, value);
+        get => _europePlayersText;
+        set => SetProperty(ref _europePlayersText, value);
+    }
+
+    private string _saPlayersText = "Connecting...";
+    public string SAPlayersText
+    {
+        get => _saPlayersText;
+        set => SetProperty(ref _saPlayersText, value);
+    }
+
+    private string _seaPlayersText = "Connecting...";
+    public string SEAPlayersText
+    {
+        get => _seaPlayersText;
+        set => SetProperty(ref _seaPlayersText, value);
     }
 
     private SolidColorBrush _serverStatusBrush = new(Color.FromRgb(0xFF, 0xB8, 0x00));
@@ -248,7 +262,7 @@ public class HomeViewModel : ViewModelBase
     public bool IsServerSelectorVisible => !IsCustomClientActive;
     public bool IsPlaytimeVisible => !IsCustomClientActive;
     
-    public bool IsActivePlayersVisible => !IsCustomClientActive && !string.IsNullOrEmpty(ActivePlayersText);
+    public bool IsActivePlayersVisible => !IsCustomClientActive && !string.IsNullOrEmpty(EuropePlayersText);
 
     // Stored after check
     private PatchConfig? _remotePatch;
@@ -294,9 +308,12 @@ public class HomeViewModel : ViewModelBase
         });
         ToggleSettingsCommand = new RelayCommand(_ => IsSettingsOpen = !IsSettingsOpen);
         
-        _playerCountService.PlayerCountUpdated += count => 
+        _playerCountService.PlayerCountsUpdated += counts => 
         {
-            ActivePlayersText = $"{count:N0} Players Online";
+            var isOnline = ServerStatusText == "Online";
+            EuropePlayersText = isOnline ? $"Europe: {counts.EuropeCount}" : "Europe: Offline";
+            SAPlayersText = isOnline ? $"South America: {counts.SACount}" : "South America: Offline";
+            SEAPlayersText = isOnline ? $"South East Asia: {counts.SEACount}" : "South East Asia: Offline";
             OnPropertyChanged(nameof(IsActivePlayersVisible));
         };
     }
