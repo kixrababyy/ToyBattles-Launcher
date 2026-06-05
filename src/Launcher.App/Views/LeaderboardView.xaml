@@ -12,8 +12,33 @@
 
     <UserControl.Resources>
         <conv:DdsLevelIconConverter x:Key="DdsLevelIconConverter"/>
-        <!-- Visibility converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Modern ScrollBar Style -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Border Background="Transparent"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="true">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#40FFFFFF" CornerRadius="3"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -35,7 +60,8 @@
                     <TextBlock Text="{Binding HeaderTitle}" FontSize="16" FontWeight="Black" Foreground="#26C0F0" FontFamily="Segoe UI" VerticalAlignment="Center"/>
                     
                     <Button Grid.Column="1" Command="{Binding ToggleViewCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4">
-                        <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#707A8A" VerticalAlignment="Center"/>
+                        <!-- Arrow pointing right (Forward) -->
+                        <TextBlock Text="&#xE72A;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#707A8A" VerticalAlignment="Center"/>
                     </Button>
                 </Grid>
                 
@@ -110,7 +136,6 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="20"/>
-                                            <ColumnDefinition Width="22"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
@@ -137,10 +162,8 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <!-- Clan Icon Placeholder -->
-                                        <TextBlock Grid.Column="1" Text="&#xEA3A;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#2ECC71" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                        <!-- Name -->
-                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                        <!-- Name (No Clan Icon) -->
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
