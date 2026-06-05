@@ -189,8 +189,8 @@ public partial class MainWindow : Window
 
         BitmapImage? img = null;
 
-        // Try disk files — valentine variant first, then default
-        string[] names = ["logo_valentine", "logo"];
+        // Try disk files
+        string[] names = ["logo"];
         foreach (var name in names)
         {
             foreach (var ext in extensions)
@@ -205,8 +205,7 @@ public partial class MainWindow : Window
             if (img != null) break;
         }
 
-        // Fall back to embedded resources — valentine first, then default
-        img ??= EmbeddedImageLoader.LoadFromResource("Assets/logo_valentine.png");
+        // Fall back to embedded resources
         img ??= EmbeddedImageLoader.LoadFromResource("Assets/logo.png");
 
         if (img == null) return;
@@ -260,8 +259,8 @@ public partial class MainWindow : Window
     {
         _wallpapers = new List<BitmapImage>();
 
-        // 1) Try valentine wallpapers first, then regular wallpapers
-        string[] wallpaperDirs = ["wallpapers-valentine", "wallpapers"];
+        // 1) Try regular wallpapers
+        string[] wallpaperDirs = ["wallpapers"];
         foreach (var dirName in wallpaperDirs)
         {
             var wallpaperDir = Path.Combine(AppContext.BaseDirectory, dirName);

@@ -34,8 +34,8 @@ public partial class HomeView : UserControl
 
         BitmapImage? img = null;
 
-        // Try disk files — valentine variant first, then default
-        string[] names = ["banner_valentine", "banner"];
+        // Try disk files
+        string[] names = ["banner"];
         foreach (var name in names)
         {
             foreach (var ext in extensions)
@@ -50,8 +50,7 @@ public partial class HomeView : UserControl
             if (img != null) break;
         }
 
-        // Fall back to embedded resources — valentine first, then default
-        img ??= EmbeddedImageLoader.LoadFromResource("Assets/banner_valentine.png");
+        // Fall back to embedded resources
         img ??= EmbeddedImageLoader.LoadFromResource("Assets/banner.png");
 
         if (img == null) return;

@@ -374,7 +374,7 @@
                                  Opacity="0.06">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#FF4D7D" Offset="0"/>
+                                    <GradientStop Color="{StaticResource GlowBlue}" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -422,7 +422,7 @@
                                  Opacity="0.05">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#CC0033" Offset="0"/>
+                                    <GradientStop Color="{StaticResource GlowDeepBlue}" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -471,7 +471,7 @@
                                  Opacity="0.04">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#FF1744" Offset="0"/>
+                                    <GradientStop Color="{StaticResource GlowGold}" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -520,7 +520,7 @@
                                  Opacity="0.03">
                             <Ellipse.Fill>
                                 <RadialGradientBrush>
-                                    <GradientStop Color="#FF85AB" Offset="0"/>
+                                    <GradientStop Color="{StaticResource GlowDeepBlue}" Offset="0"/>
                                     <GradientStop Color="Transparent" Offset="1"/>
                                 </RadialGradientBrush>
                             </Ellipse.Fill>
@@ -617,13 +617,13 @@
                                            Margin="0,0,0,4">
                                     <TextBlock.Foreground>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#FF4D7D" Offset="0"/>
-                                            <GradientStop Color="#FF1744" Offset="1"/>
+                                            <GradientStop Color="{StaticResource AccentBlue}" Offset="0"/>
+                                            <GradientStop Color="{StaticResource AccentGold}" Offset="1"/>
                                         </LinearGradientBrush>
                                     </TextBlock.Foreground>
                                     <TextBlock.Effect>
                                         <DropShadowEffect BlurRadius="24" ShadowDepth="0"
-                                                          Color="#FF4D7D" Opacity="0.4"/>
+                                                          Color="{StaticResource AccentBlue}" Opacity="0.4"/>
                                     </TextBlock.Effect>
                                 </TextBlock>
 
@@ -638,7 +638,7 @@
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                             <GradientStop Color="Transparent" Offset="0"/>
-                                            <GradientStop Color="#20FF4D7D" Offset="0.5"/>
+                                            <GradientStop Color="#2026C0F0" Offset="0.5"/>
                                             <GradientStop Color="Transparent" Offset="1"/>
                                         </LinearGradientBrush>
                                     </Border.Background>
