@@ -6,7 +6,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Pfim;
-using Launcher.Core.Config;
+using Launcher.Core.Models;
 
 namespace Launcher.App.Converters;
 

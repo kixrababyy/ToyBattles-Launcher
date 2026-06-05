@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Input;
+using Launcher.Core.Models;
 
 namespace Launcher.App.ViewModels;
 
