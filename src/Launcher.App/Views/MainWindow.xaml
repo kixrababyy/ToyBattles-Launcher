@@ -181,58 +181,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- LEADERBOARDS -->
-                        <Button Command="{Binding NavigateLeaderboardCommand}"
-                                Style="{StaticResource SideNavButton}"
-                                ToolTip="Leaderboards">
-                            <Grid Width="72" Height="60">
-                                <!-- Left accent bar -->
-                                <Border Width="3" Height="30"
-                                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                                        CornerRadius="0,3,3,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
-                                            <Setter Property="Opacity" Value="0"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
-                                                    <Setter Property="Opacity" Value="1"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                </Border>
-                                <!-- Icon background pill -->
-                                <Border Width="44" Height="44" CornerRadius="12"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
-                                                    <Setter Property="Background" Value="#14FF4D7D"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                </Border>
-                                <!-- Trophy icon -->
-                                <TextBlock Text="&#xE839;"
-                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#28304A"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
-                        </Button>
 
                         <!-- Custom Clients -->
                         <ItemsControl ItemsSource="{Binding CustomClients}">

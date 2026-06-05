@@ -33,10 +33,8 @@ public class MainViewModel : ViewModelBase
     public HomeViewModel HomeVM { get; }
     public SettingsViewModel SettingsVM { get; }
     public RepairViewModel RepairVM { get; }
-    public LeaderboardViewModel LeaderboardVM { get; }
 
     public ICommand NavigateHomeCommand { get; }
-    public ICommand NavigateLeaderboardCommand { get; }
     public ICommand ShowBannerCommand { get; }
     public ICommand NavigateSettingsCommand { get; }
     public ICommand NavigateRepairCommand { get; }
@@ -55,10 +53,8 @@ public class MainViewModel : ViewModelBase
         HomeVM = new HomeViewModel();
         SettingsVM = new SettingsViewModel();
         RepairVM = new RepairViewModel();
-        LeaderboardVM = new LeaderboardViewModel();
         _currentPage = HomeVM;
         NavigateHomeCommand = new RelayCommand(_ => SelectCustomClient(null));
-        NavigateLeaderboardCommand = new RelayCommand(_ => { CurrentPage = LeaderboardVM; SelectedNav = "Leaderboard"; IsBannerMode = false; });
         ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; });
         NavigateSettingsCommand = new RelayCommand(_ => { CurrentPage = SettingsVM; SelectedNav = "Settings"; IsBannerMode = false; SettingsVM.Refresh(); });
         NavigateRepairCommand = new RelayCommand(_ => { CurrentPage = RepairVM; SelectedNav = "Repair"; IsBannerMode = false; });
