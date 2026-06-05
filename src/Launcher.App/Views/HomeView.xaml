@@ -488,7 +488,8 @@
                         <ComboBox Style="{StaticResource DarkComboBox}"
                                   ItemsSource="{Binding ServerOptions}"
                                   SelectedItem="{Binding SelectedServer, Mode=TwoWay}"
-                                  VerticalAlignment="Center">
+                                  VerticalAlignment="Center"
+                                  Visibility="{Binding IsServerSelectorVisible, Converter={StaticResource BoolToVis}}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -638,7 +639,8 @@
                                 CornerRadius="10"
                                 Padding="18,10"
                                 Margin="0,0,0,14"
-                                HorizontalAlignment="Center">
+                                HorizontalAlignment="Center"
+                                Visibility="{Binding IsPlaytimeVisible, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE121;"
                                            FontFamily="Segoe MDL2 Assets" FontSize="13"

@@ -235,7 +235,11 @@ public class HomeViewModel : ViewModelBase
                                     or LauncherState.Error or LauncherState.NeedGameRoot;
     public bool IsCancelVisible => State is LauncherState.Downloading or LauncherState.Installing
                                     or LauncherState.Applying;
-    public bool IsCheckUpdatesVisible => State is LauncherState.Ready or LauncherState.Error;
+                                    
+    public bool IsCustomClientActive => !string.IsNullOrEmpty(_localState.ActiveClientId);
+    public bool IsCheckUpdatesVisible => (State is LauncherState.Ready or LauncherState.Error) && !IsCustomClientActive;
+    public bool IsServerSelectorVisible => !IsCustomClientActive;
+    public bool IsPlaytimeVisible => !IsCustomClientActive;
 
     // Stored after check
     private PatchConfig? _remotePatch;
@@ -1094,6 +1098,12 @@ public class HomeViewModel : ViewModelBase
         }
 
         _localState.Save();
+        
+        OnPropertyChanged(nameof(IsCustomClientActive));
+        OnPropertyChanged(nameof(IsCheckUpdatesVisible));
+        OnPropertyChanged(nameof(IsServerSelectorVisible));
+        OnPropertyChanged(nameof(IsPlaytimeVisible));
+        
         RefreshStateFromMemory();
     }
 
