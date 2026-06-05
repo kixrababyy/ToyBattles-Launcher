@@ -72,76 +72,51 @@
                 CornerRadius="8"
                 Padding="12,8"
                 Visibility="{Binding IsActivePlayersVisible, Converter={StaticResource BoolToVis}}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Europe -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <Ellipse Width="8" Height="8" Fill="#2ECC71" Margin="0,0,8,0">
-                        <Ellipse.Effect>
-                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#2ECC71" Opacity="0.8"/>
-                        </Ellipse.Effect>
-                        <Ellipse.Triggers>
-                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.4" To="1.0" Duration="0:0:1.5">
-                                            <DoubleAnimation.EasingFunction>
-                                                <SineEase EasingMode="EaseInOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Ellipse.Triggers>
-                    </Ellipse>
-                    <TextBlock Text="{Binding EuropePlayersText}" FontSize="13" FontWeight="SemiBold" FontFamily="Segoe UI" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- South America -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <Ellipse Width="8" Height="8" Fill="#2ECC71" Margin="0,0,8,0">
-                        <Ellipse.Effect>
-                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#2ECC71" Opacity="0.8"/>
-                        </Ellipse.Effect>
-                        <Ellipse.Triggers>
-                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.4" To="1.0" Duration="0:0:1.5">
-                                            <DoubleAnimation.EasingFunction>
-                                                <SineEase EasingMode="EaseInOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Ellipse.Triggers>
-                    </Ellipse>
-                    <TextBlock Text="{Binding SAPlayersText}" FontSize="13" FontWeight="SemiBold" FontFamily="Segoe UI" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- South East Asia -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="8" Height="8" Fill="#2ECC71" Margin="0,0,8,0">
-                        <Ellipse.Effect>
-                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#2ECC71" Opacity="0.8"/>
-                        </Ellipse.Effect>
-                        <Ellipse.Triggers>
-                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.4" To="1.0" Duration="0:0:1.5">
-                                            <DoubleAnimation.EasingFunction>
-                                                <SineEase EasingMode="EaseInOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Ellipse.Triggers>
-                    </Ellipse>
-                    <TextBlock Text="{Binding SEAPlayersText}" FontSize="13" FontWeight="SemiBold" FontFamily="Segoe UI" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </StackPanel>
+            <Grid>
+                <ToggleButton x:Name="PlayerCountToggle" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="Transparent">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#2ECC71" Margin="0,0,8,0">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#2ECC71" Opacity="0.8"/>
+                                        </Ellipse.Effect>
+                                        <Ellipse.Triggers>
+                                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                                <BeginStoryboard>
+                                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.4" To="1.0" Duration="0:0:1.5">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Ellipse.Triggers>
+                                    </Ellipse>
+                                    <TextBlock Text="{Binding ActivePlayersText}" FontSize="13" FontWeight="SemiBold" FontFamily="Segoe UI" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <Path Data="M0,0 L4,4 L8,0" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.5" Margin="8,2,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+                
+                <Popup IsOpen="{Binding IsChecked, ElementName=PlayerCountToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=PlayerCountToggle}" Placement="Bottom" VerticalOffset="8" AllowsTransparency="True">
+                    <Border Background="#1A1C23" BorderBrush="#333" BorderThickness="1" CornerRadius="6" Padding="12" MinWidth="160">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="4" Opacity="0.5"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="{Binding EuropePlayersText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding SAPlayersText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding SEAPlayersText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
         </Border>
 
         <!-- ===== BOTTOM OVERLAY: Game info + Play ===== -->

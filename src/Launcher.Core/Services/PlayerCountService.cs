@@ -12,6 +12,7 @@ public class PlayerCountService
 
     public class PlayerCounts
     {
+        public int TotalCount { get; set; }
         public int EuropeCount { get; set; }
         public int SACount { get; set; }
         public int SEACount { get; set; }
@@ -52,6 +53,11 @@ public class PlayerCountService
                 var counts = new PlayerCounts();
                 
                 using var doc = JsonDocument.Parse(response);
+                if (doc.RootElement.TryGetProperty("total", out var totalProp) && totalProp.TryGetInt32(out int t))
+                {
+                    counts.TotalCount = t;
+                }
+                
                 if (doc.RootElement.TryGetProperty("servers", out var serversArray) && serversArray.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var server in serversArray.EnumerateArray())

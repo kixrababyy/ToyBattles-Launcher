@@ -132,7 +132,14 @@ public class HomeViewModel : ViewModelBase
         get => _isVersionUpToDate;
         set => SetProperty(ref _isVersionUpToDate, value);
     }
-    
+
+    private string _activePlayersText = "Connecting...";
+    public string ActivePlayersText
+    {
+        get => _activePlayersText;
+        set => SetProperty(ref _activePlayersText, value);
+    }
+
     private string _europePlayersText = "Connecting...";
     public string EuropePlayersText
     {
@@ -311,6 +318,7 @@ public class HomeViewModel : ViewModelBase
         _playerCountService.PlayerCountsUpdated += counts => 
         {
             var isOnline = ServerStatusText == "Online";
+            ActivePlayersText = isOnline ? $"{counts.TotalCount:N0} Players Online" : "0 Players Online";
             EuropePlayersText = isOnline ? $"Europe: {counts.EuropeCount}" : "Europe: Offline";
             SAPlayersText = isOnline ? $"South America: {counts.SACount}" : "South America: Offline";
             SEAPlayersText = isOnline ? $"South East Asia: {counts.SEACount}" : "South East Asia: Offline";
