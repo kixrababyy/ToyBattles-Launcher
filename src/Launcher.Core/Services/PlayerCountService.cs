@@ -61,7 +61,8 @@ public class PlayerCountService
             }
             catch
             {
-                // Ignore network errors to avoid spamming logs, will retry next interval
+                // Fallback to a mock number so the UI can be previewed before the real API is ready
+                PlayerCountUpdated?.Invoke(420);
             }
 
             try

@@ -133,7 +133,7 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _isVersionUpToDate, value);
     }
     
-    private string _activePlayersText = string.Empty;
+    private string _activePlayersText = "Connecting...";
     public string ActivePlayersText
     {
         get => _activePlayersText;
