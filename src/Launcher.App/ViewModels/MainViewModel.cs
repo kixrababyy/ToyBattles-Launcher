@@ -88,7 +88,7 @@ public class MainViewModel : ViewModelBase
         RepairVM = new RepairViewModel();
         _currentPage = HomeVM;
         NavigateHomeCommand = new RelayCommand(_ => SelectCustomClient(null));
-        ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; });
+        ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; HomeVM.RefreshStateFromDisk(); });
         NavigateSettingsCommand = new RelayCommand(_ => { CurrentPage = SettingsVM; SelectedNav = "Settings"; IsBannerMode = false; SettingsVM.Refresh(); });
         NavigateRepairCommand = new RelayCommand(_ => { CurrentPage = RepairVM; SelectedNav = "Repair"; IsBannerMode = false; });
 
@@ -187,6 +187,7 @@ public class MainViewModel : ViewModelBase
             SelectedNav = client.Id;
         }
 
+        HomeVM.RefreshStateFromDisk();
         HomeVM.SetActiveClient(client);
     }
 
