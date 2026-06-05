@@ -63,6 +63,44 @@
             </Image.Triggers>
         </Image>
 
+        <!-- ===== TOP LEFT: Active Players ===== -->
+        <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                Margin="36,36,0,0"
+                Background="#1AFFFFFF"
+                BorderBrush="#25FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12,8"
+                Visibility="{Binding IsActivePlayersVisible, Converter={StaticResource BoolToVis}}">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Green dot -->
+                <Ellipse Width="8" Height="8" Fill="#2ECC71" Margin="0,0,8,0">
+                    <Ellipse.Effect>
+                        <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#2ECC71" Opacity="0.8"/>
+                    </Ellipse.Effect>
+                    <!-- Pulse Animation -->
+                    <Ellipse.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.4" To="1.0" Duration="0:0:1.5">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseInOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Ellipse.Triggers>
+                </Ellipse>
+                <TextBlock Text="{Binding ActivePlayersText}"
+                           FontSize="13" FontWeight="SemiBold"
+                           FontFamily="Segoe UI"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
         <!-- ===== BOTTOM OVERLAY: Game info + Play ===== -->
         <Grid VerticalAlignment="Bottom" Margin="36,0,36,32">
             <Grid.RowDefinitions>

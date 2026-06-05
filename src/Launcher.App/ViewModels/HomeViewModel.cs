@@ -132,6 +132,13 @@ public class HomeViewModel : ViewModelBase
         get => _isVersionUpToDate;
         set => SetProperty(ref _isVersionUpToDate, value);
     }
+    
+    private string _activePlayersText = string.Empty;
+    public string ActivePlayersText
+    {
+        get => _activePlayersText;
+        set => SetProperty(ref _activePlayersText, value);
+    }
 
     private SolidColorBrush _serverStatusBrush = new(Color.FromRgb(0xFF, 0xB8, 0x00));
     public SolidColorBrush ServerStatusBrush
@@ -240,11 +247,15 @@ public class HomeViewModel : ViewModelBase
     public bool IsCheckUpdatesVisible => (State is LauncherState.Ready or LauncherState.Error) && !IsCustomClientActive;
     public bool IsServerSelectorVisible => !IsCustomClientActive;
     public bool IsPlaytimeVisible => !IsCustomClientActive;
+    
+    public bool IsActivePlayersVisible => !IsCustomClientActive && !string.IsNullOrEmpty(ActivePlayersText);
 
     // Stored after check
     private PatchConfig? _remotePatch;
     private UpdateInfoConfig? _updateInfoConfig;
     private LocalState _localState = new();
+    
+    private readonly Launcher.Core.Services.PlayerCountService _playerCountService = new();
 
     public ICommand ActionCommand { get; }
     public ICommand CancelCommand { get; }
@@ -282,6 +293,12 @@ public class HomeViewModel : ViewModelBase
             await CheckForUpdatesAsync();
         });
         ToggleSettingsCommand = new RelayCommand(_ => IsSettingsOpen = !IsSettingsOpen);
+        
+        _playerCountService.PlayerCountUpdated += count => 
+        {
+            ActivePlayersText = $"{count:N0} Players Online";
+            OnPropertyChanged(nameof(IsActivePlayersVisible));
+        };
     }
 
     /// <summary>
@@ -291,6 +308,9 @@ public class HomeViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         _localState = LocalState.Load();
+        
+        // Start polling the placeholder API (60s interval)
+        _playerCountService.StartPolling("https://api.toybattles.net/v1/players", TimeSpan.FromSeconds(60));
 
         // Recover playtime from any session where the launcher was closed with the game running
         RecoverPendingSession();
@@ -1103,6 +1123,7 @@ public class HomeViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsCheckUpdatesVisible));
         OnPropertyChanged(nameof(IsServerSelectorVisible));
         OnPropertyChanged(nameof(IsPlaytimeVisible));
+        OnPropertyChanged(nameof(IsActivePlayersVisible));
         
         RefreshStateFromMemory();
     }
