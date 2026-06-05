@@ -22,6 +22,12 @@ public class LocalState
     /// <summary>Remembers the installed game root for each server profile.</summary>
     public Dictionary<string, string?> ServerGameRoots { get; set; } = new();
 
+    /// <summary>The ID of the currently selected custom client, or null if using the default server client.</summary>
+    public string? ActiveClientId { get; set; }
+
+    /// <summary>List of custom clients added by the user.</summary>
+    public List<CustomClient> CustomClients { get; set; } = new();
+
     /// <summary>Cumulative playtime across all sessions, in seconds.</summary>
     public long TotalPlaytimeSeconds { get; set; } = 0;
 
@@ -108,4 +114,12 @@ public class LocalState
         var json = JsonSerializer.Serialize(this, JsonOptions);
         File.WriteAllText(path, json);
     }
+}
+
+public class CustomClient
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = "Custom Client";
+    public string Path { get; set; } = string.Empty;
+    public string IconPath { get; set; } = string.Empty;
 }

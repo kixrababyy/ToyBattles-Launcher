@@ -18,6 +18,7 @@
     <Window.Resources>
         <conv:NavSelectionConverter x:Key="NavSelect"/>
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:EqualityConverter x:Key="EqualityConverter"/>
 
         <DataTemplate DataType="{x:Type vm:HomeViewModel}">
             <views:HomeView/>
@@ -27,6 +28,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:RepairViewModel}">
             <views:RepairView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LeaderboardViewModel}">
+            <views:LeaderboardView/>
         </DataTemplate>
     </Window.Resources>
 
@@ -174,6 +178,141 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
+                            </Grid>
+                        </Button>
+
+                        <!-- LEADERBOARDS -->
+                        <Button Command="{Binding NavigateLeaderboardCommand}"
+                                Style="{StaticResource SideNavButton}"
+                                ToolTip="Leaderboards">
+                            <Grid Width="72" Height="60">
+                                <!-- Left accent bar -->
+                                <Border Width="3" Height="30"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                                        CornerRadius="0,3,3,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
+                                            <Setter Property="Opacity" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                                <!-- Icon background pill -->
+                                <Border Width="44" Height="44" CornerRadius="12"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
+                                                    <Setter Property="Background" Value="#14FF4D7D"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                                <!-- Trophy icon -->
+                                <TextBlock Text="&#xE839;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#28304A"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedNav, Converter={StaticResource NavSelect}, ConverterParameter=Leaderboard}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Button>
+
+                        <!-- Custom Clients -->
+                        <ItemsControl ItemsSource="{Binding CustomClients}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.SelectClientCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource SideNavButton}"
+                                            ToolTip="{Binding Name}">
+                                        <Grid Width="72" Height="60">
+                                            <!-- Left accent bar -->
+                                            <Border Width="3" Height="30"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                    CornerRadius="0,3,3,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
+                                                        <Setter Property="Opacity" Value="0"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Value="True">
+                                                                <DataTrigger.Binding>
+                                                                    <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                                                        <Binding Path="DataContext.SelectedNav" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                                        <Binding Path="Id"/>
+                                                                    </MultiBinding>
+                                                                </DataTrigger.Binding>
+                                                                <Setter Property="Opacity" Value="1"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                            <!-- Icon background pill -->
+                                            <Border Width="44" Height="44" CornerRadius="12"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Value="True">
+                                                                <DataTrigger.Binding>
+                                                                    <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                                                        <Binding Path="DataContext.SelectedNav" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                                        <Binding Path="Id"/>
+                                                                    </MultiBinding>
+                                                                </DataTrigger.Binding>
+                                                                <Setter Property="Background" Value="#14FF4D7D"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                            <!-- Custom icon -->
+                                            <Image Source="{Binding IconPath}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        </Grid>
+                                        <!-- Right click menu to remove client -->
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Remove Client" 
+                                                          Command="{Binding DataContext.RemoveClientCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Add Client -->
+                        <Button Command="{Binding AddClientCommand}"
+                                Style="{StaticResource SideNavButton}"
+                                ToolTip="Add Client">
+                            <Grid Width="72" Height="60">
+                                <Border Width="44" Height="44" CornerRadius="12"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderBrush="#10FFFFFF" BorderThickness="1" BorderStyle="Dash">
+                                </Border>
+                                <TextBlock Text="&#xE710;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="#28304A"/>
                             </Grid>
                         </Button>
 

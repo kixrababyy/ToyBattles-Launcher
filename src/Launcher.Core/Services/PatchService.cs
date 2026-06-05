@@ -317,6 +317,8 @@ public class PatchService
                 // Roll back on failure
                 if (File.Exists(backupPath) && !File.Exists(targetPath))
                     File.Move(backupPath, targetPath);
+                
+                throw new Exception($"Patch failed: Could not replace {targetPath} because it is locked or inaccessible.", ex);
             }
         }
     }

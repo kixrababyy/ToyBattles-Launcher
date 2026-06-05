@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Windows;
 using Launcher.App.Views;
 using Launcher.Core.Services;
@@ -6,8 +7,17 @@ namespace Launcher.App;
 
 public partial class App : Application
 {
+    private static Mutex _instanceMutex;
+
     private async void App_Startup(object sender, StartupEventArgs e)
     {
+        _instanceMutex = new Mutex(true, "ToyBattlesLauncherInstance", out bool createdNew);
+        if (!createdNew)
+        {
+            Shutdown();
+            return;
+        }
+
 #if VALENTINE_THEME
         Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
         {

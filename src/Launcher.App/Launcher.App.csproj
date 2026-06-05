@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Launcher.App</RootNamespace>
     <AssemblyName>Launcher</AssemblyName>
-    <Version>1.0.17</Version>
+    <Version>1.0.20</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
 
@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
+    <PackageReference Include="Pfim" Version="0.11.2" />
   </ItemGroup>
 
   <ItemGroup>

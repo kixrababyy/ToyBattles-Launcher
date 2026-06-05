@@ -490,9 +490,6 @@ public class HomeViewModel : ViewModelBase
             {
                 IsVersionUpToDate = true;
                 LogService.Log($"Version {installedVersion} is up to date.");
-                
-                StatusText = "Verifying configuration...";
-                await CheckCgdDipAsync();
 
                 State = LauncherState.Ready;
                 StatusText = "Game is up to date!";
@@ -1067,19 +1064,27 @@ public class HomeViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Re-reads state from disk and updates Home if the game root changed
-    /// (e.g. the user pointed Settings to a different folder).
-    /// </summary>
-    public void RefreshStateFromDisk()
+    public void SetActiveClient(CustomClient? client)
     {
-        var onDisk = LocalState.Load();
+        _localState.ActiveClientId = client?.Id;
+        
+        if (client == null)
+        {
+            // Revert to server default
+            _localState.ServerGameRoots.TryGetValue(_selectedServer, out var restoredRoot);
+            _localState.GameRootPath = restoredRoot;
+        }
+        else
+        {
+            _localState.GameRootPath = client.Path;
+        }
 
-        // Nothing relevant changed — skip
-        if (onDisk.GameRootPath == _localState.GameRootPath)
-            return;
+        _localState.Save();
+        RefreshStateFromMemory();
+    }
 
-        _localState = onDisk;
+    private void RefreshStateFromMemory()
+    {
         ApplyServerProfile();
 
         if (string.IsNullOrEmpty(_localState.GameRootPath) ||
@@ -1094,6 +1099,22 @@ public class HomeViewModel : ViewModelBase
         LoadLocalVersion();
         InstalledVersionText = _localState.InstalledVersion is { } v ? $"Installed: {v}" : string.Empty;
         _ = CheckForUpdatesAsync();
+    }
+
+    /// <summary>
+    /// Re-reads state from disk and updates Home if the game root changed
+    /// (e.g. the user pointed Settings to a different folder).
+    /// </summary>
+    public void RefreshStateFromDisk()
+    {
+        var onDisk = LocalState.Load();
+
+        // Nothing relevant changed — skip
+        if (onDisk.GameRootPath == _localState.GameRootPath && onDisk.ActiveClientId == _localState.ActiveClientId)
+            return;
+
+        _localState = onDisk;
+        RefreshStateFromMemory();
     }
 
     private static string? FindGameRoot(string startDir)

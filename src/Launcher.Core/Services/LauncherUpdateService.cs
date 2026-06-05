@@ -42,8 +42,8 @@ public static class LauncherUpdateService
                 return (false, null);
 
             // Ignore dev/debug builds explicitly set to 1.0.0.0 or 0.0.0.0
-            if (current.Major == 1 && current.Minor == 0 && current.Build == 0 && current.Revision <= 0 ||
-                current.Major == 0 && current.Minor == 0 && current.Build == 0 && current.Revision <= 0)
+            if ((current.Major == 1 && current.Minor == 0 && current.Build <= 0 && current.Revision <= 0) ||
+                (current.Major == 0 && current.Minor == 0 && current.Build <= 0 && current.Revision <= 0))
             {
                 LogService.Log("Launcher version check skipped — running a dev/debug build.");
                 return (false, null);
