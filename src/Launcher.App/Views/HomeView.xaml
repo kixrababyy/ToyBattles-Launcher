@@ -704,7 +704,7 @@
             <!-- LEADERBOARD -->
             <views:LeaderboardView DataContext="{Binding LeaderboardVM}" 
                                    HorizontalAlignment="Right" 
-                                   Width="220" MaxHeight="320" 
+                                   Width="220" MaxHeight="500" 
                                    Margin="0,16,0,0"/>
         </StackPanel>
 
