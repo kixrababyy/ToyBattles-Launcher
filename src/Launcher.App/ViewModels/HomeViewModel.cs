@@ -28,6 +28,8 @@ public enum LauncherState
 /// </summary>
 public class HomeViewModel : ViewModelBase
 {
+    public LeaderboardViewModel LeaderboardVM { get; } = new();
+
     private readonly PatchService _patchService = new();
     private readonly DownloadService _downloadService = new();
     private readonly InstallService _installService = new();

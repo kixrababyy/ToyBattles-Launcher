@@ -16,6 +16,11 @@ namespace Launcher.App.Converters;
 /// </summary>
 public class DdsLevelIconConverter : IValueConverter
 {
+    private static BitmapSource? _cachedSpritesheet;
+    private const int Columns = 16;
+    private const int IconWidth = 32;
+    private const int IconHeight = 32;
+
     public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is not int level)
@@ -23,17 +28,18 @@ public class DdsLevelIconConverter : IValueConverter
 
         try
         {
-            var state = LocalState.Load();
-            if (string.IsNullOrEmpty(state.GameRootPath))
-                return null; // Game not installed
-
-            string filename = $"icon_user_grade_{level:D2}.dds";
-            string filePath = Path.Combine(state.GameRootPath, "data", "ui", "icon", "ENG", filename);
-
-            if (!File.Exists(filePath))
+            var sheet = GetSpritesheet();
+            if (sheet == null)
                 return null;
 
-            return LoadDDS(filePath);
+            int col = level % Columns;
+            int row = level / Columns;
+
+            // Ensure we don't crop outside the image bounds
+            if (col * IconWidth >= sheet.PixelWidth || row * IconHeight >= sheet.PixelHeight)
+                return null;
+
+            return new CroppedBitmap(sheet, new System.Windows.Int32Rect(col * IconWidth, row * IconHeight, IconWidth, IconHeight));
         }
         catch (Exception ex)
         {
@@ -47,9 +53,20 @@ public class DdsLevelIconConverter : IValueConverter
         throw new NotImplementedException();
     }
 
-    private static BitmapSource LoadDDS(string file)
+    private static BitmapSource? GetSpritesheet()
     {
-        using var image = Pfimage.FromFile(file);
+        if (_cachedSpritesheet != null)
+            return _cachedSpritesheet;
+
+        var state = LocalState.Load();
+        if (string.IsNullOrEmpty(state.GameRootPath))
+            return null; // Game not installed
+
+        string filePath = Path.Combine(state.GameRootPath, "data", "ui", "icon", "ENG", "icon_user_grade_01.dds");
+        if (!File.Exists(filePath))
+            return null;
+
+        using var image = Pfimage.FromFile(filePath);
         
         PixelFormat format;
         switch (image.Format)
@@ -78,7 +95,8 @@ public class DdsLevelIconConverter : IValueConverter
                 image.DataLen,
                 image.Stride);
 
-            bitmap.Freeze(); // Allow crossing threads safely if needed
+            bitmap.Freeze(); // Allow crossing threads safely
+            _cachedSpritesheet = bitmap;
             return bitmap;
         }
         finally

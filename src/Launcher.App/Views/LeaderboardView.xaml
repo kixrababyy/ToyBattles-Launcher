@@ -14,35 +14,35 @@
         <conv:DdsLevelIconConverter x:Key="DdsLevelIconConverter"/>
     </UserControl.Resources>
              
-    <Grid Margin="36,36,36,36">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="30"/>
+            <ColumnDefinition Width="15"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Top Players -->
-        <Border Grid.Column="0" Background="#90080D14" CornerRadius="16" BorderBrush="#2026C0F0" BorderThickness="1" Padding="24">
+        <Border Grid.Column="0" Background="#A0080D14" CornerRadius="12" BorderBrush="#2026C0F0" BorderThickness="1" Padding="12,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Top 10 Players" FontSize="26" FontWeight="Black" Foreground="#26C0F0" Margin="0,0,0,20" FontFamily="Segoe UI"/>
+                <TextBlock Grid.Row="0" Text="Top 10 Players" FontSize="16" FontWeight="Black" Foreground="#26C0F0" Margin="0,0,0,10" FontFamily="Segoe UI"/>
                 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding TopPlayers}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#40141926" CornerRadius="8" Margin="0,0,0,10" Padding="15,12">
+                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,6">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="40"/>
-                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="25"/>
+                                            <ColumnDefinition Width="30"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
-                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="22" FontWeight="Black" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="14" FontWeight="Black" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#707A8A"/>
@@ -51,7 +51,7 @@
                                                             <Setter Property="Foreground" Value="#FFD700"/>
                                                             <Setter Property="Effect">
                                                                 <Setter.Value>
-                                                                    <DropShadowEffect Color="#FFD700" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
+                                                                    <DropShadowEffect Color="#FFD700" BlurRadius="6" ShadowDepth="0" Opacity="0.5"/>
                                                                 </Setter.Value>
                                                             </Setter>
                                                         </DataTrigger>
@@ -68,11 +68,11 @@
                                         <!-- Level Icon -->
                                         <Image Grid.Column="1" 
                                                Source="{Binding Level, Converter={StaticResource DdsLevelIconConverter}}" 
-                                               Width="28" Height="28" 
+                                               Width="20" Height="20" 
                                                HorizontalAlignment="Left" VerticalAlignment="Center"
                                                RenderOptions.BitmapScalingMode="HighQuality"/>
                                         <!-- Name -->
-                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -83,27 +83,27 @@
         </Border>
 
         <!-- Top Clans -->
-        <Border Grid.Column="2" Background="#90080D14" CornerRadius="16" BorderBrush="#20FF4D7D" BorderThickness="1" Padding="24">
+        <Border Grid.Column="2" Background="#A0080D14" CornerRadius="12" BorderBrush="#20FF4D7D" BorderThickness="1" Padding="12,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Top 10 Clans" FontSize="26" FontWeight="Black" Foreground="#FF4D7D" Margin="0,0,0,20" FontFamily="Segoe UI"/>
+                <TextBlock Grid.Row="0" Text="Top 10 Clans" FontSize="16" FontWeight="Black" Foreground="#FF4D7D" Margin="0,0,0,10" FontFamily="Segoe UI"/>
                 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding TopClans}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#40141926" CornerRadius="8" Margin="0,0,0,10" Padding="15,12">
+                                <Border Background="#40141926" CornerRadius="6" Margin="0,0,0,4" Padding="8,6">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="40"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="25"/>
+                                            <ColumnDefinition Width="25"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
-                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="22" FontWeight="Black" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="14" FontWeight="Black" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#707A8A"/>
@@ -112,7 +112,7 @@
                                                             <Setter Property="Foreground" Value="#FFD700"/>
                                                             <Setter Property="Effect">
                                                                 <Setter.Value>
-                                                                    <DropShadowEffect Color="#FFD700" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
+                                                                    <DropShadowEffect Color="#FFD700" BlurRadius="6" ShadowDepth="0" Opacity="0.5"/>
                                                                 </Setter.Value>
                                                             </Setter>
                                                         </DataTrigger>
@@ -127,9 +127,9 @@
                                             </TextBlock.Style>
                                         </TextBlock>
                                         <!-- Clan Icon Placeholder -->
-                                        <TextBlock Grid.Column="1" Text="&#xEA3A;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#2ECC71" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="&#xEA3A;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#2ECC71" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                         <!-- Name -->
-                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

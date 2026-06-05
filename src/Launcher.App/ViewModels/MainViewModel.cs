@@ -16,7 +16,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _currentPage, value);
     }
 
-    private string _selectedNav = "Leaderboard";
+    private string _selectedNav = "Home";
     public string SelectedNav
     {
         get => _selectedNav;
@@ -56,8 +56,7 @@ public class MainViewModel : ViewModelBase
         SettingsVM = new SettingsViewModel();
         RepairVM = new RepairViewModel();
         LeaderboardVM = new LeaderboardViewModel();
-        _currentPage = LeaderboardVM;
-
+        _currentPage = HomeVM;
         NavigateHomeCommand = new RelayCommand(_ => SelectCustomClient(null));
         NavigateLeaderboardCommand = new RelayCommand(_ => { CurrentPage = LeaderboardVM; SelectedNav = "Leaderboard"; IsBannerMode = false; });
         ShowBannerCommand = new RelayCommand(_ => { CurrentPage = HomeVM; SelectedNav = "Banner"; IsBannerMode = true; });
