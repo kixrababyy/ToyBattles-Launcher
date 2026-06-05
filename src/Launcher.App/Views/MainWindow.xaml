@@ -741,7 +741,7 @@
         </Border>
         
         <!-- Glassmorphism Card -->
-        <Border Background="#301A2235" Width="440" Height="360" CornerRadius="16" BorderBrush="#30FFFFFF" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Background="#301A2235" Width="440" Height="420" CornerRadius="16" BorderBrush="#30FFFFFF" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="40" ShadowDepth="10" Color="#000000" Opacity="0.5"/>
             </Border.Effect>
@@ -760,7 +760,9 @@
 
                     <!-- Client Name -->
                     <TextBlock Text="CLIENT NAME" FontSize="11" FontWeight="SemiBold" Foreground="#707A8A" Margin="0,0,0,6"/>
-                    <TextBox Text="{Binding NewClientName, UpdateSourceTrigger=PropertyChanged}" Background="#15FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" Foreground="White" FontSize="13" Padding="10,8" Margin="0,0,0,16" CaretBrush="White"/>
+                    <Border Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="6" Margin="0,0,0,16">
+                        <TextBox Text="{Binding NewClientName, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" Padding="10,8" CaretBrush="White"/>
+                    </Border>
 
                     <!-- Client Folder Path -->
                     <TextBlock Text="CLIENT FOLDER (REQUIRED)" FontSize="11" FontWeight="SemiBold" Foreground="#707A8A" Margin="0,0,0,6"/>
@@ -769,7 +771,9 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Text="{Binding NewClientPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Background="#15FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" Foreground="White" FontSize="13" Padding="10,8" Margin="0,0,8,0"/>
+                        <Border Grid.Column="0" Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
+                            <TextBox Text="{Binding NewClientPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" Padding="10,8"/>
+                        </Border>
                         <Button Grid.Column="1" Command="{Binding BrowseClientPathCommand}" Content="Browse" Style="{StaticResource SecondaryButton}" Padding="16,8"/>
                     </Grid>
 
@@ -780,7 +784,9 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Text="{Binding NewClientIconPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Background="#15FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" Foreground="White" FontSize="13" Padding="10,8" Margin="0,0,8,0"/>
+                        <Border Grid.Column="0" Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
+                            <TextBox Text="{Binding NewClientIconPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" Padding="10,8"/>
+                        </Border>
                         <Button Grid.Column="1" Command="{Binding BrowseClientIconCommand}" Content="Browse" Style="{StaticResource SecondaryButton}" Padding="16,8"/>
                     </Grid>
 
@@ -789,7 +795,7 @@
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Background" Value="#26C0F0"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Foreground" Value="#000000"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
