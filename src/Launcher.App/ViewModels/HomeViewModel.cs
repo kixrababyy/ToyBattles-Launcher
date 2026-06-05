@@ -310,7 +310,7 @@ public class HomeViewModel : ViewModelBase
         _localState = LocalState.Load();
         
         // Start polling the placeholder API (60s interval)
-        _playerCountService.StartPolling("https://api.toybattles.net/v1/players", TimeSpan.FromSeconds(60));
+        _playerCountService.StartPolling("http://57.129.76.24:8000/api/playercount", TimeSpan.FromSeconds(60));
 
         // Recover playtime from any session where the launcher was closed with the game running
         RecoverPendingSession();

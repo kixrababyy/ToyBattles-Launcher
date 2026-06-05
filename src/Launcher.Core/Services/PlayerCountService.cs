@@ -52,7 +52,7 @@ public class PlayerCountService
                 else
                 {
                     using var doc = JsonDocument.Parse(response);
-                    if (doc.RootElement.TryGetProperty("players", out var playersProp) && 
+                    if (doc.RootElement.TryGetProperty("total", out var playersProp) && 
                         playersProp.TryGetInt32(out int jsonCount))
                     {
                         PlayerCountUpdated?.Invoke(jsonCount);
