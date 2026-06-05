@@ -214,6 +214,18 @@ public class MainViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         await HomeVM.InitializeAsync();
+        
+        // Restore the selected custom client (or Home) to keep the UI sidebar and bindings in sync
+        var state = Launcher.Core.Models.LocalState.Load();
+        if (!string.IsNullOrEmpty(state.ActiveClientId))
+        {
+            var activeClient = CustomClients.FirstOrDefault(c => c.Id == state.ActiveClientId);
+            SelectCustomClient(activeClient); // Will fallback to Home if activeClient is null
+        }
+        else
+        {
+            SelectCustomClient(null);
+        }
     }
 
     private static void OpenUrl(string url)
