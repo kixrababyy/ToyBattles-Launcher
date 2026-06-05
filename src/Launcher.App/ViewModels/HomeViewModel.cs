@@ -421,6 +421,18 @@ public class HomeViewModel : ViewModelBase
 
     private async Task CheckForUpdatesAsync()
     {
+        if (!string.IsNullOrEmpty(_localState.ActiveClientId))
+        {
+            // Custom Client: Bypass updates completely
+            State = LauncherState.Ready;
+            StatusText = "Custom Client loaded. Ready to play.";
+            RemoteVersionText = "Updates Bypassed";
+            ServerStatusText = "Local Client";
+            ServerStatusBrush = new SolidColorBrush(Color.FromRgb(0x00, 0xFF, 0x00));
+            PatchNotes = $"🎮 Custom Client Active\n\nUpdates are disabled for custom clients. Click PLAY to launch directly.";
+            return;
+        }
+
         State = LauncherState.Checking;
         StatusText = "Checking for updates...";
         ProgressPercent = 0;
