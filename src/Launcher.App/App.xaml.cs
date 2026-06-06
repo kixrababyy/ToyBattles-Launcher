@@ -51,10 +51,13 @@ public partial class App : Application
 
                     var progress = new Progress<DownloadProgress>(p => splash.SetDownloadProgress(p));
 
+                    await LauncherUpdateService.DownloadAndApplyAsync(progress);
+
+                    // Reached only if download was successful and the bat script was started.
+                    // If the download fails, it throws an exception and we never reach this line,
+                    // avoiding the false "swap failed" popup on the next boot.
                     localState.LastAttemptedUpdateVersion = remoteStr;
                     localState.Save();
-
-                    await LauncherUpdateService.DownloadAndApplyAsync(progress);
 
                     splash.SetStatus("Restarting...");
                     await Task.Delay(600);
