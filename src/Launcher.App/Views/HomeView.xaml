@@ -729,10 +729,11 @@
                 <Border Background="#C2080D14" CornerRadius="14"
                         BorderBrush="#2026C0F0" BorderThickness="1"
                         Padding="20,16" Width="260" HorizontalAlignment="Right" VerticalAlignment="Top"
-                        DataContext="{Binding DataContext.RepairVM, RelativeSource={RelativeSource AncestorType=Window}}"
-                        Opacity="0" Visibility="Collapsed">
+                        DataContext="{Binding DataContext.RepairVM, RelativeSource={RelativeSource AncestorType=Window}}">
                     <Border.Style>
                         <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Opacity" Value="0"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding DataContext.IsSettingsOpen, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
