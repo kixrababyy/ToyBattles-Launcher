@@ -252,7 +252,7 @@ public class HomeViewModel : ViewModelBase
         LauncherState.Ready => "PLAY",
         LauncherState.Launching => "LAUNCHING...",
         LauncherState.Error => "RETRY",
-        LauncherState.NeedGameRoot => _localState.TotalPlaytimeSeconds > 0 ? "SCAN FILES" : "INSTALL",
+        LauncherState.NeedGameRoot => string.IsNullOrEmpty(_localState.GameRootPath) ? "INSTALL" : "SCAN FILES",
         _ => "..."
     };
 
@@ -1160,9 +1160,10 @@ public class HomeViewModel : ViewModelBase
         if (string.IsNullOrEmpty(_localState.GameRootPath) ||
             !ValidateCriticalFiles(_localState.GameRootPath))
         {
-            _localState.GameRootPath = null;
             State = LauncherState.NeedGameRoot;
-            StatusText = "Game not installed. Click INSTALL to download and set up the game.";
+            StatusText = string.IsNullOrEmpty(_localState.GameRootPath) 
+                ? "Game not installed. Click INSTALL to download and set up the game." 
+                : "Game files missing or incomplete. Click SCAN FILES to verify and install.";
             return;
         }
 
