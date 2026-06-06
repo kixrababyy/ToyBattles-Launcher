@@ -21,4 +21,13 @@ public class ClanRank
 
     [JsonPropertyName("clan_name")]
     public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("clan_front_icon")]
+    public int FrontId { get; set; }
+
+    [JsonPropertyName("clan_back_icon")]
+    public int BackId { get; set; }
+
+    [JsonIgnore]
+    public string IconUrl => $"http://57.129.76.24:8000/api/clan-icon?frontId={FrontId}&backId={BackId}";
 }

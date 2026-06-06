@@ -136,6 +136,7 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <!-- Rank -->
@@ -162,8 +163,10 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <!-- Name (No Clan Icon) -->
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                        <!-- Clan Icon -->
+                                        <Image Grid.Column="1" Source="{Binding IconUrl}" Width="16" Height="16" Margin="4,0,8,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        <!-- Name -->
+                                        <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
