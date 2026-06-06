@@ -356,85 +356,8 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
                         <StackPanel>
 
-                            <!-- ===== VERIFY & REPAIR SECTION ===== -->
-                            <StackPanel DataContext="{Binding DataContext.RepairVM, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        Margin="0,0,0,16">
-
-                                <TextBlock Text="Verify &amp; Repair" FontSize="15" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"
-                                           Margin="0,0,0,4"/>
-                                <TextBlock Text="Check your game files for corruption or missing data."
-                                           FontSize="12" FontFamily="Segoe UI"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           Margin="0,0,0,12"/>
-
-                                <!-- Status text -->
-                                <TextBlock Text="{Binding StatusText}"
-                                           FontSize="13" FontFamily="Segoe UI"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,12"/>
-
-                                <!-- Progress bar + current file (when repairing) -->
-                                <StackPanel Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"
-                                            Margin="0,0,0,12">
-                                    <ProgressBar Value="{Binding ProgressPercent}"
-                                                 Minimum="0" Maximum="100"
-                                                 Style="{StaticResource AccentProgressBar}"/>
-                                    <TextBlock Text="{Binding CurrentFileText}"
-                                               FontSize="11" FontFamily="Segoe UI"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,5,0,0"
-                                               Visibility="{Binding CurrentFileText, Converter={StaticResource StringToVis}}"/>
-                                </StackPanel>
-
-                                <!-- Results summary -->
-                                <Border Visibility="{Binding ResultSummary, Converter={StaticResource StringToVis}}"
-                                        Background="#0CFFFFFF"
-                                        CornerRadius="10" Padding="14,12"
-                                        Margin="0,0,0,12"
-                                        BorderBrush="#0EFFFFFF" BorderThickness="1">
-                                    <TextBlock Text="{Binding ResultSummary}"
-                                               FontSize="13" FontFamily="Segoe UI"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
-                                               TextWrapping="Wrap" LineHeight="20"/>
-                                </Border>
-
-                                <!-- Action buttons -->
-                                <WrapPanel>
-                                    <Button Content="Verify &amp; Repair Files"
-                                            Command="{Binding RepairCommand}"
-                                            IsEnabled="{Binding IsRepairEnabled}"
-                                            Style="{StaticResource PrimaryButton}"
-                                            Margin="0,0,8,6"/>
-                                    <Button Content="Full Reinstall"
-                                            Command="{Binding FullReinstallCommand}"
-                                            IsEnabled="{Binding IsReinstallEnabled}"
-                                            Style="{StaticResource SecondaryButton}"
-                                            Margin="0,0,8,6"/>
-                                    <Button Content="Clear Cache"
-                                            Command="{Binding ClearCacheCommand}"
-                                            IsEnabled="{Binding IsRepairEnabled}"
-                                            Style="{StaticResource SecondaryButton}"
-                                            Margin="0,0,8,6"/>
-                                    <Button Content="Cancel"
-                                            Command="{Binding CancelCommand}"
-                                            Style="{StaticResource SecondaryButton}"
-                                            Margin="0,0,0,6"
-                                            Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"/>
-                                </WrapPanel>
-
-                                <!-- Cache size feedback -->
-                                <TextBlock Text="{Binding CacheSizeText}"
-                                           FontSize="11" FontFamily="Segoe UI"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           Margin="0,6,0,0"
-                                           Visibility="{Binding CacheSizeText, Converter={StaticResource StringToVis}}"/>
-
-                            </StackPanel>
-
                             <!-- ===== SETTINGS SECTION ===== -->
+                            <!-- (Verify & Repair moved to right column) -->
                             <Border Height="1" Background="#14FFFFFF" Margin="0,0,0,16"/>
 
                             <!-- GAME DIRECTORY -->
@@ -759,11 +682,117 @@
                 </Button>
             </StackPanel>
 
-            <!-- LEADERBOARD -->
-            <views:LeaderboardView DataContext="{Binding LeaderboardVM}" 
-                                   HorizontalAlignment="Right" 
-                                   Width="220" MaxHeight="500" 
-                                   Margin="0,16,0,0"/>
+            <!-- LEADERBOARD & REPAIR OVERLAY -->
+            <Grid Margin="0,16,0,0">
+                <!-- Leaderboard (collapses when settings/repair opens) -->
+                <views:LeaderboardView DataContext="{Binding LeaderboardVM}" 
+                                       HorizontalAlignment="Right" 
+                                       Width="220" VerticalAlignment="Top">
+                    <views:LeaderboardView.Style>
+                        <Style TargetType="views:LeaderboardView">
+                            <Setter Property="MaxHeight" Value="500"/>
+                            <Setter Property="Opacity" Value="1"/>
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
+                                    <DataTrigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="MaxHeight" To="0" Duration="0:0:0.3">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseInOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.EnterActions>
+                                    <DataTrigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="MaxHeight" To="500" Duration="0:0:0.3">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseInOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.3"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.ExitActions>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </views:LeaderboardView.Style>
+                </views:LeaderboardView>
+
+                <!-- Verify & Repair Panel (appears when settings opens) -->
+                <Border Background="#C2080D14" CornerRadius="14"
+                        BorderBrush="#2026C0F0" BorderThickness="1"
+                        Padding="20,16" Width="260" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        DataContext="{Binding DataContext.RepairVM, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Opacity="0" Visibility="Collapsed">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.IsSettingsOpen, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <DataTrigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.3" BeginTime="0:0:0.1"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.EnterActions>
+                                    <DataTrigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.ExitActions>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock Text="Verify &amp; Repair" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Check your game files for corruption or missing data."
+                                   FontSize="12" FontFamily="Segoe UI" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap"/>
+
+                        <TextBlock Text="{Binding StatusText}" FontSize="13" FontFamily="Segoe UI"
+                                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                        <StackPanel Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                            <ProgressBar Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" Style="{StaticResource AccentProgressBar}"/>
+                            <TextBlock Text="{Binding CurrentFileText}" FontSize="11" FontFamily="Segoe UI"
+                                       Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,5,0,0"
+                                       Visibility="{Binding CurrentFileText, Converter={StaticResource StringToVis}}"/>
+                        </StackPanel>
+
+                        <Border Visibility="{Binding ResultSummary, Converter={StaticResource StringToVis}}" Background="#0CFFFFFF"
+                                CornerRadius="10" Padding="14,12" Margin="0,0,0,12" BorderBrush="#0EFFFFFF" BorderThickness="1">
+                            <TextBlock Text="{Binding ResultSummary}" FontSize="13" FontFamily="Segoe UI"
+                                       Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" LineHeight="20"/>
+                        </Border>
+
+                        <WrapPanel>
+                            <Button Content="Verify &amp; Repair Files" Command="{Binding RepairCommand}" IsEnabled="{Binding IsRepairEnabled}"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,0,8,6"/>
+                            <Button Content="Full Reinstall" Command="{Binding FullReinstallCommand}" IsEnabled="{Binding IsReinstallEnabled}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"/>
+                            <Button Content="Clear Cache" Command="{Binding ClearCacheCommand}" IsEnabled="{Binding IsRepairEnabled}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"/>
+                            <Button Content="Cancel" Command="{Binding CancelCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,0,6"
+                                    Visibility="{Binding IsRepairing, Converter={StaticResource BoolToVis}}"/>
+                        </WrapPanel>
+
+                        <TextBlock Text="{Binding CacheSizeText}" FontSize="11" FontFamily="Segoe UI"
+                                   Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                   Visibility="{Binding CacheSizeText, Converter={StaticResource StringToVis}}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </StackPanel>
 
     </Grid>

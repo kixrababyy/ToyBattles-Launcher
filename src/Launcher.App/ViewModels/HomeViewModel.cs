@@ -252,7 +252,7 @@ public class HomeViewModel : ViewModelBase
         LauncherState.Ready => "PLAY",
         LauncherState.Launching => "LAUNCHING...",
         LauncherState.Error => "RETRY",
-        LauncherState.NeedGameRoot => "INSTALL",
+        LauncherState.NeedGameRoot => _localState.TotalPlaytimeSeconds > 0 ? "SCAN FILES" : "INSTALL",
         _ => "..."
     };
 
